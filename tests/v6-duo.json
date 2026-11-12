@@ -1,116 +1,122 @@
 {
   "format": "little-room",
-  "version": 3,
-  "name": "各自专注，一起生活",
-  "progress": {
-    "badges": [
-      "coder",
-      "cats",
-      "rental"
-    ]
-  },
+  "version": 5,
+  "name": "各自专注，一起生活 · 示范",
   "state": {
     "layout": "corridor",
     "contract": "duo",
     "mode": "challenge",
+    "round": 1,
+    "roundRules": 2,
     "night": false,
+    "curtains": false,
     "wall": "#e8e5d7",
     "floor": "#c7aa80",
-    "curtains": false,
-    "pet": false,
     "furniture": [
       {
-        "id": "v3-12",
+        "id": "demo-42",
         "type": "desk",
-        "x": -3.3,
-        "z": -2.7,
+        "x": -1.25,
+        "z": -5.36,
         "rot": 0,
         "y": 0.03,
         "color": "#c59d70"
       },
       {
-        "id": "v3-13",
+        "id": "demo-43",
         "type": "desk",
-        "x": -0.4,
-        "z": -2.7,
+        "x": 1.25,
+        "z": 1.02,
         "rot": 0,
         "y": 0.03,
         "color": "#c59d70"
       },
       {
-        "id": "v3-14",
+        "id": "demo-44",
         "type": "stool",
-        "x": -3.3,
-        "z": -1.8,
+        "x": -1.25,
+        "z": -4.5,
         "rot": 2,
         "y": 0.03,
         "color": "#b8c49c"
       },
       {
-        "id": "v3-15",
+        "id": "demo-45",
         "type": "stool",
-        "x": -0.4,
-        "z": -1.8,
+        "x": 1.25,
+        "z": 1.87,
         "rot": 2,
         "y": 0.03,
         "color": "#b8c49c"
       },
       {
-        "id": "v3-16",
+        "id": "demo-46",
         "type": "pendant",
-        "x": -3.3,
-        "z": -2.7,
+        "x": -1.65,
+        "z": -5.41,
         "rot": 0,
-        "y": 0.815,
+        "y": 0.8150000000000001,
         "color": "#e8d7b1",
-        "parentId": "v3-12"
+        "parentId": "demo-42"
       },
       {
-        "id": "v3-17",
+        "id": "demo-47",
         "type": "pendant",
-        "x": -0.4,
-        "z": -2.7,
+        "x": 1.65,
+        "z": 0.97,
         "rot": 0,
-        "y": 0.815,
+        "y": 0.8150000000000001,
         "color": "#e8d7b1",
-        "parentId": "v3-13"
+        "parentId": "demo-43"
       },
       {
-        "id": "v3-18",
+        "id": "demo-48",
         "type": "bed",
-        "x": 3.25,
-        "z": -1.8,
-        "rot": 0,
+        "x": -0.96,
+        "z": 5,
+        "rot": 1,
         "y": 0.03,
         "color": "#e3cbb1"
       },
       {
-        "id": "v3-19",
+        "id": "demo-49",
         "type": "wardrobe",
-        "x": 2.8,
-        "z": 2.6,
-        "rot": 0,
+        "x": 1.725,
+        "z": 4.1,
+        "rot": 3,
         "y": 0.03,
         "color": "#d9d3bc"
       },
       {
-        "id": "v3-20",
+        "id": "demo-50",
         "type": "sofa",
-        "x": -2.8,
-        "z": 2.5,
-        "rot": 0,
+        "x": 1.55,
+        "z": -3.85,
+        "rot": 3,
         "y": 0.03,
         "color": "#b8c49c"
       },
       {
-        "id": "v3-21",
+        "id": "demo-51",
         "type": "plant",
-        "x": -0.5,
-        "z": 2.5,
+        "x": 1.65,
+        "z": -5.3,
         "rot": 0,
         "y": 0.03,
         "color": "#7b9364"
+      },
+      {
+        "id": "demo-52",
+        "type": "rug",
+        "x": 0,
+        "z": -3.9,
+        "rot": 1,
+        "y": 0.03,
+        "color": "#e1ceb0"
       }
     ]
+  },
+  "progress": {
+    "badges": []
   }
 }

@@ -10,7 +10,7 @@ const js=engine+fs.readFileSync(path.join(dir,'dist/rules.js'),'utf8')+'\n'+fs.r
 // Function replacements preserve literal dollar signs in JavaScript (especially $$).
 const html=fs.readFileSync(path.join(dir,'dist/index.html'),'utf8').replace(/<link rel="stylesheet"[^>]+>/,()=>'<style>'+css+'</style>').replace('<script src="rules.js"></script>','').replace('<script type="module" src="app.js"></script>',()=>'<script>'+js.replace(/<\/script/gi,'<\\/script')+'</script>');
 new (require('node:vm').Script)(js,{filename:'offline-game.js'});
-if(!html.includes('$$=s=>')||html.includes('data:text/javascript')||html.includes('<style>500;'))throw new Error('Broken offline bundle');
+if(!html.includes('$$ = s =>')||html.includes('data:text/javascript')||html.includes('<style>500;'))throw new Error('Broken offline bundle');
 fs.writeFileSync(path.join(dir,'little-room.html'),html);
 console.log('Offline game ready: '+path.join(dir,'little-room.html'));
 

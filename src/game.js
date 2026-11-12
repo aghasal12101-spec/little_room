@@ -1,69 +1,999 @@
-const R=globalThis.RoomRules;
-const uid=()=>globalThis.crypto?.randomUUID?.()||'room-'+Date.now().toString(36)+'-'+Math.random().toString(36).slice(2);
-const clone=v=>JSON.parse(JSON.stringify(v));
-const dims=f=>R.dims(f,byId),total=()=>R.total(state,byId),budget=()=>R.budget(state),goals=()=>R.goals(state,byId,layouts);
-let library={version:2,activeId:null,slots:[],badges:[],stars:{},tutorialDone:false,tutorialProgress:null},pendingContract='coder',scoreCache=null,lastPhotoURL=null;
-const cleanStars=value=>Object.fromEntries(Object.entries(value&&typeof value==='object'&&!Array.isArray(value)?value:{}).filter(([id])=>R.contracts[id]).map(([id,n])=>[id,Math.max(0,Math.min(3,Math.floor(Number(n)||0)))]));
-function mergeProgress(progress){if(!progress)return;library.badges=[...new Set([...library.badges,...(Array.isArray(progress.badges)?progress.badges:[]).filter(id=>id==='free'||R.contracts[id])])];for(const [id,n]of Object.entries(cleanStars(progress.stars)))library.stars[id]=Math.max(library.stars[id]||0,n)}
-function currentSlot(){return library.slots.find(s=>s.id===library.activeId)}
-function reason(f){let test=state;const old=state.furniture.find(o=>o.id===f.id);if(old)test={...state,furniture:R.transformFamily(old,f,state)};else test={...state,furniture:[...state.furniture,f]};let why=R.reason(f,test,byId,layouts);if(!why&&old)for(const child of test.furniture.filter(o=>R.familyIds(old,test).has(o.id))){why=R.reason(child,test,byId,layouts);if(why)return '组合中的「'+byId[child.type].name+'」：'+why}return why}
-function valid(f){return !reason(f)}
-function canBuy(type){return total()+byId[type].price<=budget()}
-function checkpoint(){history.push(JSON.stringify(state));if(history.length>70)history.shift();future=[]}
-function thumbnail(){renderer.render(scene,camera);const c=document.createElement('canvas');c.width=280;c.height=180;const x=c.getContext('2d');x.fillStyle=state.night?'#47575c':'#eeeee6';x.fillRect(0,0,280,180);const ratio=Math.min(280/renderer.domElement.width,180/renderer.domElement.height),w=renderer.domElement.width*ratio,h=renderer.domElement.height*ratio;x.drawImage(renderer.domElement,(280-w)/2,(180-h)/2,w,h);return c.toDataURL('image/jpeg',.65)}
-function writeLibrary(){try{localStorage.setItem('little-room-library-v2',JSON.stringify(library));$('saveState').textContent='✓ 已自动保存';return true}catch{$('saveState').textContent='请导出备份';toast('浏览器存储空间不足或不可用，请到作品集导出存档');return false}}
-let saveDebounce=null,thumbDebounce=null;
-function flushSave(){clearTimeout(saveDebounce);saveDebounce=null;return writeLibrary()}
-function persist(immediate=false){const slot=currentSlot();if(slot){slot.state=clone(state);slot.updated=Date.now()}
-  clearTimeout(saveDebounce);clearTimeout(thumbDebounce);$('saveState').textContent='正在保存…';
-  const capture=()=>{if(placement||drag){thumbDebounce=setTimeout(capture,700);return}if(currentSlot()===slot){slot.thumb=thumbnail();flushSave()}};
-  if(immediate){if(slot&&!placement&&!drag)slot.thumb=thumbnail();flushSave()}else{saveDebounce=setTimeout(flushSave,200);thumbDebounce=setTimeout(capture,900)}
-  clearTimeout(saveTimer);saveTimer=setTimeout(()=>{if($('saveState').textContent!=='请导出备份')$('saveState').textContent='本地自动保存'},2200)
+const R = globalThis.RoomRules;
+const hintText = () =>
+  matchMedia("(pointer:coarse)").matches
+    ? "单指拖动家具或转动视角 · 双指缩放与平移"
+    : "左键旋转 · 右键平移 · 滚轮缩放 · V 走进房间";
+const uid = () =>
+  globalThis.crypto?.randomUUID?.() || "room-" + Date.now().toString(36) + "-" + Math.random().toString(36).slice(2);
+const clone = (v) => JSON.parse(JSON.stringify(v));
+const dims = (f) => R.dims(f, byId),
+  total = () => R.total(state, byId),
+  budget = () => R.budget(state),
+  goals = () => R.goals(state, byId, layouts);
+let library = {
+    version: 2,
+    activeId: null,
+    slots: [],
+    badges: [],
+    stars: {},
+    tutorialDone: false,
+    tutorialProgress: null,
+  },
+  pendingContract = "coder",
+  scoreCache = null,
+  lastPhotoURL = null;
+const cleanStars = (value) =>
+  Object.fromEntries(
+    Object.entries(value && typeof value === "object" && !Array.isArray(value) ? value : {})
+      .filter(([id]) => R.contracts[id])
+      .map(([id, n]) => [id, Math.max(0, Math.min(3, Math.floor(Number(n) || 0)))]),
+  );
+function mergeProgress(progress) {
+  if (!progress) return;
+  library.badges = [
+    ...new Set([
+      ...library.badges,
+      ...(Array.isArray(progress.badges) ? progress.badges : []).filter((id) => id === "free" || R.contracts[id]),
+    ]),
+  ];
+  for (const [id, n] of Object.entries(cleanStars(progress.stars)))
+    library.stars[id] = Math.max(library.stars[id] || 0, n);
 }
-function commit(){scoreCache=null;rebuild();syncTutorial();persist()}
-function restoreState(value){cancelPlacement();state=clone(value);selected=null;scoreCache=null;room();rebuild();cameraUpdate();renderSurfaces();renderProducts();resumeTutorial()}
-function undo(){if(!history.length)return;future.push(JSON.stringify(state));restoreState(JSON.parse(history.pop()));persist();toast('已撤销上一步')}
-function redo(){if(!future.length)return;history.push(JSON.stringify(state));restoreState(JSON.parse(future.pop()));persist();toast('已重做')}
-function drawOutline(){requestFrame();if(outline){scene.remove(outline);outline.geometry.dispose();outline.material.dispose();outline=null}if(!selected||placement)return;const g=furnitureGroup.children.find(o=>o.userData.id===selected);if(g){g.updateMatrixWorld(true);outline=new THREE.BoxHelper(g,'#729455');scene.add(outline)}}
-function select(id){selected=id;drawOutline();updateSelection()}
-function updateSelection(){const f=state.furniture.find(f=>f.id===selected);$('selection').hidden=!f||!!placement;if(!f)return;$('selectedName').textContent=byId[f.type].name+(f.groupId?' · 成组':'');$('groupBtn').textContent=f.groupId?'解除组合':'组合餐桌椅';$('groupBtn').hidden=!!f.parentId||!['dining','stool','bench'].includes(f.type);$('interactBtn').hidden=!['lamp','pendant','tv'].includes(f.type);$('interactBtn').textContent=f.on===false?'打开':'关闭';$('angleValue').textContent=Math.round(f.rot*90)+'°';$('swatches').innerHTML='';$('rotateBtn').disabled=byId[f.type].mount==='wall';for(const color of availablePalette()){const b=document.createElement('button');b.style.background=color;b.title='切换家具配色';b.setAttribute('aria-label','换成'+color);b.classList.toggle('active',f.color===color);b.onclick=()=>{checkpoint();f.color=color;commit()};$('swatches').append(b)}}
-function startPlacement(type,existing=null){cancelPlacement();if(!existing&&!itemUnlocked(byId[type])){toast('完成委托升至 Lv.'+byId[type].level+' 解锁；自由创作可直接使用');return}if(!existing&&!canBuy(type)){toast('预算还剩 ¥'+Math.max(0,budget()-total()).toLocaleString()+'，这件家具暂时放不下预算');return}if(!existing&&state.furniture.length>=200){toast('这间屋子已满 200 件，请先收起一些家具');return}const f=existing?{...existing}:{id:uid(),type,x:0,z:0,y:.03,rot:0,color:byId[type].color};placement={f,existing:!!existing,original:existing?{...existing}:null,hasPoint:false,snapLabel:''};ghost=model(byId[type],f.color);if(existing){const a=f.rot*Math.PI/2,c=Math.cos(a),sn=Math.sin(a);for(const o of state.furniture.filter(o=>o.id!==f.id&&R.familyIds(f,state).has(o.id))){const part=model(byId[o.type],o.color),dx=o.x-f.x,dz=o.z-f.z;part.position.set(c*dx-sn*dz,(o.y||.03)-(f.y||.03),sn*dx+c*dz);part.rotation.y=(o.rot-f.rot)*Math.PI/2;ghost.add(part)}}ghost.traverse(o=>{if(o.material){o.material.transparent=true;o.material.opacity=.55}});scene.add(ghost);ghost.visible=false;if(existing)for(const g of furnitureGroup.children){const o=state.furniture.find(f=>f.id===g.userData.id);if(o&&(R.familyIds(existing,state).has(o.id)))g.visible=false}selected=null;drawOutline();$('placement').hidden=false;$('placeRotate').disabled=byId[type].mount==='wall';$('placementText').textContent=byId[type].mount==='wall'?'点击墙面挂起，避开窗户':byId[type].mount==='surface'?'把鼠标移到桌子或柜子上':'点击地板放下 '+byId[type].name;$('hint').textContent='拖动摆放 · 绿色可放 / 红色查看原因 · R 旋转 · Esc 取消';updateSelection()}
-function smartSnap(f,raw){let step=snap?.25:.05;f.x=Math.round(raw.x/step)*step;f.z=Math.round(raw.z/step)*step;if(!snap||f.parentId)return '';const l=layouts.find(l=>l.id===state.layout),[w,d]=dims(f),xs=[],zs=[];for(const wall of l.walls){if(wall[0]===wall[2]){if(raw.z>=Math.min(wall[1],wall[3])&&raw.z<=Math.max(wall[1],wall[3]))xs.push(wall[0]+w/2+.07,wall[0]-w/2-.07)}else if(raw.x>=Math.min(wall[0],wall[2])&&raw.x<=Math.max(wall[0],wall[2]))zs.push(wall[1]+d/2+.07,wall[1]-d/2-.07)}for(const o of state.furniture){if(R.familyIds(f,state).has(o.id)||o.parentId||byId[o.type].mount==='wall')continue;const[ow,od]=dims(o);xs.push(o.x,o.x-ow/2+w/2,o.x+ow/2-w/2,o.x-(ow+w)/2-.07,o.x+(ow+w)/2+.07);zs.push(o.z,o.z-od/2+d/2,o.z+od/2-d/2,o.z-(od+d)/2-.07,o.z+(od+d)/2+.07)}let aligned=false;for(const[key,values]of [['x',xs],['z',zs]]){values.sort((a,b)=>Math.abs(raw[key]-a)-Math.abs(raw[key]-b));if(values.length&&Math.abs(raw[key]-values[0])<.14){f[key]=values[0];aligned=true}}return aligned?'已吸附墙边 / 家具对齐':''}
-function hitFurniture(e){rayAt(e);return ray.intersectObjects(furnitureGroup.children,true).find(h=>{let o=h.object;while(o){if(!o.visible)return false;o=o.parent}return !!h.object.userData.id})}
-function positionPlacement(e,offset=null){if(!placement)return;const f=placement.f,def=byId[f.type];rayAt(e);placement.hasPoint=false;placement.snapLabel='';
-  if(def.mount==='wall'){const l=layouts.find(l=>l.id===state.layout),hits=[];l.walls.forEach((w,i)=>{const vertical=w[0]===w[2],p=ray.ray.intersectPlane(new THREE.Plane(new THREE.Vector3(vertical?1:0,0,vertical?0:1),-(vertical?w[0]+.1:w[1]+.1)),new THREE.Vector3());if(!p)return;const along=vertical?p.z:p.x,lo=vertical?Math.min(w[1],w[3]):Math.min(w[0],w[2]),hi=vertical?Math.max(w[1],w[3]):Math.max(w[0],w[2]);if(along>=lo&&along<=hi&&p.y>=.35&&p.y<=2.5)hits.push({p,i,vertical,distance:ray.ray.origin.distanceTo(p)})});hits.sort((a,b)=>a.distance-b.distance);if(hits.length){const h=hits[0];f.x=h.p.x;f.z=h.p.z;f.y=Math.round((h.p.y-def.h/2)*10)/10;f.rot=h.vertical?1:0;f.wallIndex=h.i;delete f.parentId;placement.hasPoint=true}
-  }else{let parent=null,p=null;if(def.mount==='surface'||def.optionalSurface){const hit=hitFurniture(e);if(hit){let candidate=state.furniture.find(o=>o.id===hit.object.userData.id);if(candidate?.parentId)candidate=state.furniture.find(o=>o.id===candidate.parentId);if(candidate&&byId[candidate.type].surface){parent=candidate;const y=(parent.y||.03)+byId[parent.type].surface;p=ray.ray.intersectPlane(new THREE.Plane(new THREE.Vector3(0,1,0),-y),new THREE.Vector3())}}}if(parent&&p){f.parentId=parent.id;f.y=(parent.y||.03)+byId[parent.type].surface;f.x=Math.round(p.x/.025)*.025;f.z=Math.round(p.z/.025)*.025;placement.snapLabel='已落在「'+byId[parent.type].name+'」上';placement.hasPoint=true}else{delete f.parentId;f.y=.03;p=ray.ray.intersectPlane(plane,new THREE.Vector3());if(p){placement.snapLabel=smartSnap(f,{x:p.x-(offset?.x||0),z:p.z-(offset?.z||0)});placement.hasPoint=true}}}
+function currentSlot() {
+  return library.slots.find((s) => s.id === library.activeId);
+}
+function reason(f) {
+  let test = state;
+  const old = state.furniture.find((o) => o.id === f.id);
+  if (old) test = { ...state, furniture: R.transformFamily(old, f, state) };
+  else test = { ...state, furniture: [...state.furniture, f] };
+  let why = R.reason(f, test, byId, layouts);
+  if (!why && old)
+    for (const child of test.furniture.filter((o) => R.familyIds(old, test).has(o.id))) {
+      why = R.reason(child, test, byId, layouts);
+      if (why) return "组合中的「" + byId[child.type].name + "」：" + why;
+    }
+  return why;
+}
+function valid(f) {
+  return !reason(f);
+}
+function canBuy(type) {
+  return total() + byId[type].price <= budget();
+}
+function checkpoint() {
+  history.push(JSON.stringify(state));
+  if (history.length > 70) history.shift();
+  future = [];
+}
+function thumbnail() {
+  renderer.render(scene, camera);
+  const c = document.createElement("canvas");
+  c.width = 280;
+  c.height = 180;
+  const x = c.getContext("2d");
+  x.fillStyle = state.night ? "#47575c" : "#eeeee6";
+  x.fillRect(0, 0, 280, 180);
+  const ratio = Math.min(280 / renderer.domElement.width, 180 / renderer.domElement.height),
+    w = renderer.domElement.width * ratio,
+    h = renderer.domElement.height * ratio;
+  x.drawImage(renderer.domElement, (280 - w) / 2, (180 - h) / 2, w, h);
+  return c.toDataURL("image/jpeg", 0.65);
+}
+function writeLibrary() {
+  try {
+    localStorage.setItem("little-room-library-v2", JSON.stringify(library));
+    $("saveState").textContent = "✓ 已自动保存";
+    return true;
+  } catch {
+    $("saveState").textContent = "请导出备份";
+    toast("浏览器存储空间不足或不可用，请到作品集导出存档");
+    return false;
+  }
+}
+let saveDebounce = null,
+  thumbDebounce = null;
+function flushSave() {
+  clearTimeout(saveDebounce);
+  saveDebounce = null;
+  return writeLibrary();
+}
+function persist(immediate = false) {
+  const slot = currentSlot();
+  if (slot) {
+    slot.state = clone(state);
+    slot.updated = Date.now();
+  }
+  clearTimeout(saveDebounce);
+  clearTimeout(thumbDebounce);
+  $("saveState").textContent = "正在保存…";
+  const capture = () => {
+    if (placement || drag) {
+      thumbDebounce = setTimeout(capture, 700);
+      return;
+    }
+    if (currentSlot() === slot) {
+      slot.thumb = thumbnail();
+      flushSave();
+    }
+  };
+  if (immediate) {
+    if (slot && !placement && !drag) slot.thumb = thumbnail();
+    flushSave();
+  } else {
+    saveDebounce = setTimeout(flushSave, 200);
+    thumbDebounce = setTimeout(capture, 900);
+  }
+  clearTimeout(saveTimer);
+  saveTimer = setTimeout(() => {
+    if ($("saveState").textContent !== "请导出备份") $("saveState").textContent = "本地自动保存";
+  }, 2200);
+}
+function commit() {
+  scoreCache = null;
+  rebuild();
+  syncTutorial();
+  persist();
+}
+function restoreState(value) {
+  cancelPlacement();
+  state = clone(value);
+  selected = null;
+  scoreCache = null;
+  room();
+  rebuild();
+  cameraUpdate();
+  renderSurfaces();
+  renderProducts();
+  resumeTutorial();
+}
+function undo() {
+  if (!history.length) return;
+  future.push(JSON.stringify(state));
+  restoreState(JSON.parse(history.pop()));
+  persist();
+  toast("已撤销上一步");
+}
+function redo() {
+  if (!future.length) return;
+  history.push(JSON.stringify(state));
+  restoreState(JSON.parse(future.pop()));
+  persist();
+  toast("已重做");
+}
+function drawOutline() {
+  requestFrame();
+  if (outline) {
+    scene.remove(outline);
+    outline.geometry.dispose();
+    outline.material.dispose();
+    outline = null;
+  }
+  if (!selected || placement) return;
+  const g = furnitureGroup.children.find((o) => o.userData.id === selected);
+  if (g) {
+    g.updateMatrixWorld(true);
+    const bounds = new THREE.Box3();
+    g.traverse((o) => {
+      if (o.isMesh && !o.userData.decor) bounds.expandByObject(o);
+    });
+    outline = new THREE.Box3Helper(bounds.expandByScalar(0.015), "#5f9a4a");
+    outline.material.depthTest = false;
+    outline.renderOrder = 5;
+    scene.add(outline);
+  }
+}
+function select(id) {
+  selected = id;
+  drawOutline();
+  updateSelection();
+}
+function updateSelection() {
+  const f = state.furniture.find((f) => f.id === selected);
+  $("selection").hidden = !f || !!placement;
+  if (!f) return;
+  $("selectedName").textContent = byId[f.type].name + (f.groupId ? " · 成组" : "");
+  $("groupBtn").textContent = f.groupId ? "解除组合" : "组合餐桌椅";
+  $("groupBtn").hidden = !!f.parentId || !["dining", "stool", "bench"].includes(f.type);
+  $("interactBtn").hidden = !["lamp", "pendant", "tv"].includes(f.type);
+  $("interactBtn").textContent = f.on === false ? "打开" : "关闭";
+  $("angleValue").textContent = Math.round(f.rot * 90) + "°";
+  $("swatches").innerHTML = "";
+  $("rotateBtn").disabled = byId[f.type].mount === "wall";
+  for (const color of availablePalette()) {
+    const b = document.createElement("button");
+    b.style.background = color;
+    b.title = "切换家具配色";
+    b.setAttribute("aria-label", "换成" + color);
+    b.classList.toggle("active", f.color === color);
+    b.onclick = () => {
+      checkpoint();
+      f.color = color;
+      commit();
+    };
+    $("swatches").append(b);
+  }
+}
+function startPlacement(type, existing = null) {
+  cancelPlacement();
+  if (!existing && !itemUnlocked(byId[type])) {
+    toast("完成委托升至 Lv." + byId[type].level + " 解锁；自由创作可直接使用");
+    return;
+  }
+  if (!existing && !canBuy(type)) {
+    toast("预算还剩 ¥" + Math.max(0, budget() - total()).toLocaleString() + "，这件家具暂时放不下预算");
+    return;
+  }
+  if (!existing && state.furniture.length >= 200) {
+    toast("这间屋子已满 200 件，请先收起一些家具");
+    return;
+  }
+  const f = existing ? { ...existing } : { id: uid(), type, x: 0, z: 0, y: 0.03, rot: 0, color: byId[type].color };
+  placement = { f, existing: !!existing, original: existing ? { ...existing } : null, hasPoint: false, snapLabel: "" };
+  ghost = model(byId[type], f.color);
+  if (existing) {
+    const a = (f.rot * Math.PI) / 2,
+      c = Math.cos(a),
+      sn = Math.sin(a);
+    for (const o of state.furniture.filter((o) => o.id !== f.id && R.familyIds(f, state).has(o.id))) {
+      const part = model(byId[o.type], o.color),
+        dx = o.x - f.x,
+        dz = o.z - f.z;
+      part.position.set(c * dx - sn * dz, (o.y || 0.03) - (f.y || 0.03), sn * dx + c * dz);
+      part.rotation.y = ((o.rot - f.rot) * Math.PI) / 2;
+      ghost.add(part);
+    }
+  }
+  ghost.traverse((o) => {
+    if (o.userData.decor) o.visible = false;
+    else if (o.material) {
+      for (const m of [].concat(o.material)) {
+        m.transparent = true;
+        m.opacity = 0.55;
+        m.depthWrite = false;
+      }
+    }
+  });
+  scene.add(ghost);
+  ghost.visible = false;
+  if (existing)
+    for (const g of furnitureGroup.children) {
+      const o = state.furniture.find((f) => f.id === g.userData.id);
+      if (o && R.familyIds(existing, state).has(o.id)) g.visible = false;
+    }
+  selected = null;
+  drawOutline();
+  $("placement").hidden = false;
+  $("placeRotate").disabled = byId[type].mount === "wall";
+  $("placementText").textContent =
+    byId[type].mount === "wall"
+      ? "点击墙面挂起，避开窗户"
+      : byId[type].mount === "surface"
+        ? "把鼠标移到桌子或柜子上"
+        : "点击地板放下 " + byId[type].name;
+  $("hint").textContent = "拖动摆放 · 绿色可放 / 红色查看原因 · R 旋转 · Esc 取消";
+  updateSelection();
+}
+function smartSnap(f, raw) {
+  let step = snap ? 0.25 : 0.05;
+  f.x = Math.round(raw.x / step) * step;
+  f.z = Math.round(raw.z / step) * step;
+  if (!snap || f.parentId) return "";
+  const l = layouts.find((l) => l.id === state.layout),
+    [w, d] = dims(f),
+    xs = [],
+    zs = [];
+  for (const wall of l.walls) {
+    if (wall[0] === wall[2]) {
+      if (raw.z >= Math.min(wall[1], wall[3]) && raw.z <= Math.max(wall[1], wall[3]))
+        xs.push(wall[0] + w / 2 + 0.07, wall[0] - w / 2 - 0.07);
+    } else if (raw.x >= Math.min(wall[0], wall[2]) && raw.x <= Math.max(wall[0], wall[2]))
+      zs.push(wall[1] + d / 2 + 0.07, wall[1] - d / 2 - 0.07);
+  }
+  for (const o of l.obstacles) {
+    if (o.name === "门") continue;
+    xs.push(o.x - (o.w + w) / 2 - 0.02, o.x + (o.w + w) / 2 + 0.02);
+    zs.push(o.z - (o.d + d) / 2 - 0.02, o.z + (o.d + d) / 2 + 0.02);
+  }
+  for (const o of state.furniture) {
+    if (R.familyIds(f, state).has(o.id) || o.parentId || byId[o.type].mount === "wall") continue;
+    const [ow, od] = dims(o);
+    xs.push(o.x, o.x - ow / 2 + w / 2, o.x + ow / 2 - w / 2, o.x - (ow + w) / 2 - 0.07, o.x + (ow + w) / 2 + 0.07);
+    zs.push(o.z, o.z - od / 2 + d / 2, o.z + od / 2 - d / 2, o.z - (od + d) / 2 - 0.07, o.z + (od + d) / 2 + 0.07);
+  }
+  let aligned = false;
+  for (const [key, values] of [
+    ["x", xs],
+    ["z", zs],
+  ]) {
+    values.sort((a, b) => Math.abs(raw[key] - a) - Math.abs(raw[key] - b));
+    if (values.length && Math.abs(raw[key] - values[0]) < 0.14) {
+      f[key] = values[0];
+      aligned = true;
+    }
+  }
+  return aligned ? "已吸附墙边 / 家具对齐" : "";
+}
+function hitFurniture(e) {
+  rayAt(e);
+  return ray.intersectObjects(furnitureGroup.children, true).find((h) => {
+    let o = h.object;
+    while (o) {
+      if (!o.visible) return false;
+      o = o.parent;
+    }
+    return !!h.object.userData.id;
+  });
+}
+function positionPlacement(e, offset = null) {
+  if (!placement) return;
+  const f = placement.f,
+    def = byId[f.type];
+  rayAt(e);
+  placement.hasPoint = false;
+  placement.snapLabel = "";
+  if (def.mount === "wall") {
+    // Hang on whichever standing wall face the pointer meets first; lowered walls cannot take art.
+    const l = layouts.find((l) => l.id === state.layout),
+      hits = [],
+      eye = camera.position;
+    l.wallInfo.forEach((info, i) => {
+      if (info.glass || (wallSets[i] && wallSets[i].cut < 2)) return;
+      for (const side of info.sides) {
+        const coord = info.line + side * 0.1;
+        if (((info.vertical ? eye.x : eye.z) - info.line) * side <= 0) continue;
+        const p = ray.ray.intersectPlane(
+          new THREE.Plane(new THREE.Vector3(info.vertical ? 1 : 0, 0, info.vertical ? 0 : 1), -coord),
+          new THREE.Vector3(),
+        );
+        if (!p) continue;
+        const along = info.vertical ? p.z : p.x;
+        if (along >= info.lo && along <= info.hi && p.y >= 0.35 && p.y <= WALL_HEIGHT - 0.15)
+          hits.push({ p, i, side, vertical: info.vertical, distance: ray.ray.origin.distanceTo(p) });
+      }
+    });
+    hits.sort((a, b) => a.distance - b.distance);
+    if (hits.length) {
+      const h = hits[0];
+      f.x = h.vertical ? layouts.find((l) => l.id === state.layout).wallInfo[h.i].line + h.side * 0.1 : Math.round(h.p.x / 0.05) * 0.05;
+      f.z = h.vertical ? Math.round(h.p.z / 0.05) * 0.05 : layouts.find((l) => l.id === state.layout).wallInfo[h.i].line + h.side * 0.1;
+      f.y = Math.round((h.p.y - def.h / 2) * 10) / 10;
+      f.rot = h.vertical ? (h.side > 0 ? 1 : 3) : h.side > 0 ? 0 : 2;
+      f.wallIndex = h.i;
+      delete f.parentId;
+      placement.hasPoint = true;
+    }
+  } else {
+    let parent = null,
+      p = null;
+    if (def.mount === "surface" || def.optionalSurface) {
+      const hit = hitFurniture(e);
+      if (hit) {
+        let candidate = state.furniture.find((o) => o.id === hit.object.userData.id);
+        if (candidate?.parentId) candidate = state.furniture.find((o) => o.id === candidate.parentId);
+        if (candidate && byId[candidate.type].surface) {
+          parent = candidate;
+          const y = (parent.y || 0.03) + byId[parent.type].surface;
+          p = ray.ray.intersectPlane(new THREE.Plane(new THREE.Vector3(0, 1, 0), -y), new THREE.Vector3());
+        }
+      }
+    }
+    if (parent && p) {
+      f.parentId = parent.id;
+      f.y = (parent.y || 0.03) + byId[parent.type].surface;
+      f.x = Math.round(p.x / 0.025) * 0.025;
+      f.z = Math.round(p.z / 0.025) * 0.025;
+      placement.snapLabel = "已落在「" + byId[parent.type].name + "」上";
+      placement.hasPoint = true;
+    } else {
+      delete f.parentId;
+      f.y = 0.03;
+      p = ray.ray.intersectPlane(plane, new THREE.Vector3());
+      if (p) {
+        placement.snapLabel = smartSnap(f, { x: p.x - (offset?.x || 0), z: p.z - (offset?.z || 0) });
+        placement.hasPoint = true;
+      }
+    }
+  }
   updateGhost();
 }
-function updateGhost(){requestFrame();if(!placement)return;drawGuides();const f=placement.f;ghost.position.set(f.x,f.y||.03,f.z);ghost.rotation.y=f.rot*Math.PI/2;const why=placement.hasPoint?reason(f):'请移到可以摆放的墙面或桌面';ghost.traverse(o=>{if(o.material)o.material.color.set(why?'#dc7c64':'#a1c67c')});ghost.visible=placement.hasPoint;$('placementText').textContent=why||placement.snapLabel||'可以放置 · '+byId[f.type].name;$('placement').classList.toggle('invalid',!!why);return !why}
-function cancelPlacement(){requestFrame();clearGuides();if(ghost){scene.remove(ghost);disposeGroup(ghost);ghost=null}if(placement?.existing)for(const g of furnitureGroup.children)g.visible=true;placement=null;$('placement').hidden=true;$('hint').textContent='拖动家具移动 · 拖动空白旋转 · 右前方绿色标记是入口';updateSelection()}
-function place(){if(!placement?.hasPoint)return;const why=reason(placement.f);if(why){toast(why);return}const f={...placement.f},repeat=$('repeatPlace').checked&&!placement.existing;checkpoint();state.furniture=placement.existing?R.transformFamily(placement.original,f,state):[...state.furniture,f];cancelPlacement();selected=f.id;commit();toast('已安放 · '+byId[f.type].name);tutorialAction(f.type==='pendant'&&f.parentId?'lamp':f.type);if(repeat){startPlacement(f.type);if(placement){placement.f.color=f.color;placement.f.rot=f.rot}}}
-function rotate(){if(placement){if(byId[placement.f.type].mount==='wall')return;placement.f.rot=normalizedRotation(placement.f.rot+Number($('angleStep').value)/90);updateGhost();return}const f=state.furniture.find(x=>x.id===selected);if(!f||byId[f.type].mount==='wall')return;const next={...f,rot:normalizedRotation(f.rot+Number($('angleStep').value)/90)},why=reason(next);if(why){toast(why);return}checkpoint();state.furniture=R.transformFamily(f,next,state);commit();tutorialAction('rotate')}
-function remove(){if(!selected)return;const f=state.furniture.find(f=>f.id===selected),ids=R.familyIds(f,state),attached=ids.size-1;checkpoint();state.furniture=state.furniture.filter(x=>!ids.has(x.id));selected=null;commit();toast(attached?'组合与附属摆件共 '+(attached+1)+' 件已收起，可撤销':'家具已收起，费用已退回')}
-function goalHTML(){return goals().map(([name,done])=>`<div class="goal ${done?'done':''}"><span class="check">${done?'✓':''}</span>${name}</div>`).join('')}
-function updateUI(){const gs=goals(),count=gs.filter(x=>x[1]).length;$('goals').innerHTML=goalHTML();$('progress').style.width=count/gs.length*100+'%';$('progressText').textContent=`${count} / ${gs.length} 个生活心愿`;$('placedCount').textContent=state.furniture.length;$('budgetLabel').innerHTML=state.mode==='challenge'?`剩余预算 <b>¥ ${(budget()-total()).toLocaleString()}</b>`:`已花费 <b>¥ ${total().toLocaleString()}</b>`;$('modeLabel').textContent=state.mode==='free'?'自由创作':state.round===2?'进阶二周目':'设计委托';const c=R.contracts[state.contract]||R.contracts.coder;$('briefTitle').textContent=state.mode==='free'?'让空房间，成为家':c.name+(state.round===2?' · 二周目':'');$('briefText').textContent=state.mode==='free'?'留出通道，再添一些自己的个性。':c.story+(state.round===2?(state.roundRules===2?' 进阶预算 ¥'+budget().toLocaleString()+'。'+R.encoreText[state.contract]+'；空间关系至少 85 分。':' 旧版进阶规则：主色不超过三种，空间关系至少 85 分。'):'');$('undoBtn').disabled=!history.length;$('redoBtn').disabled=!future.length;$('sceneTitle').textContent=currentSlot()?.name||layouts.find(l=>l.id===state.layout).name;$('roomTitle').textContent=(currentSlot()?.name||'我的理想小屋')+' · '+layouts.find(l=>l.id===state.layout).name;updateSelection();updateProgressUI()}
-function assessment(){return scoreCache||(scoreCache=R.evaluate(state,byId,layouts))}
-function finish(){cancelPlacement();select(null);if(tutorial)tutorialAction('finish');const result=assessment();$('resultTitle').textContent=result.complete?'把日子，过成喜欢的样子。':'好生活，值得再打磨一点。';$('resultText').textContent=(result.complete?'设计完成！':'设计建议已准备好。')+' 生活需求、动线和基本空间关系是完成条件；具体进阶要求见下方目标。';$('resultStats').innerHTML=`<div><strong>${result.score}</strong><span>设计灵感分 / 100</span></div><div><strong>${state.furniture.length}</strong><span>件心选好物</span></div><div><strong>¥${total().toLocaleString()}</strong><span>装修花费</span></div>`;$('resultGoals').innerHTML=goalHTML();$('scoreBars').innerHTML=result.metrics.map(([label,value])=>`<div><span>${label}</span><i><b style="width:${value}%"></b></i><strong>${value}</strong></div>`).join('');$('starGoals').innerHTML=state.mode==='challenge'?result.starGoals.map(([label,done])=>`<div class="${done?'done':''}"><span>${done?'★':'☆'}</span>${label}</div>`).join(''):'';renderDesignTips(result);let changed=false,xp=0;if(result.complete){const badge=state.mode==='challenge'?state.contract:'free';if(!library.badges.includes(badge)){library.badges.push(badge);xp=badge==='free'?0:100;changed=true}if(state.mode==='challenge'&&result.stars>(library.stars[state.contract]||0)){library.stars[state.contract]=result.stars;changed=true}if(changed){persist();renderProducts();renderSurfaces();updateProgressUI()}}const best=state.mode==='challenge'?library.stars[state.contract]||0:0;$('earnedBadge').textContent=result.complete?(state.mode==='challenge'?'✦ '+R.contracts[state.contract].badge+' · 本次 '+result.stars+' 星 / 历史最佳 '+'★'.repeat(best)+'☆'.repeat(3-best)+(xp?' · +'+xp+' 经验':' · 最佳成绩已记录'):'✦ 获得徽章 · 自由造梦家'):'继续调整，完成心愿、动线和基本空间关系，即可获得徽章';$('result').showModal()}
-function photo(){cancelPlacement();const old=selected;select(null);renderer.render(scene,camera);const canvas=document.createElement('canvas');canvas.width=1600;canvas.height=1200;const ctx=canvas.getContext('2d');ctx.fillStyle=state.night?'#47575c':'#eeeee6';ctx.fillRect(0,0,1600,1200);const source=renderer.domElement,ratio=Math.min(1600/source.width,1050/source.height),w=source.width*ratio,h=source.height*ratio;ctx.drawImage(source,(1600-w)/2,(1050-h)/2,w,h);ctx.fillStyle=state.night?'#f6f3e6':'#526449';ctx.font='40px Microsoft YaHei, sans-serif';ctx.fillText('住进理想 / '+(currentSlot()?.name||'我的小屋').slice(0,22),70,1110);ctx.font='19px Microsoft YaHei, sans-serif';ctx.fillText('LITTLE ROOM STUDIO · '+state.furniture.length+' 件心选好物 · DESIGN YOUR EVERYDAY',73,1150);lastPhotoURL=canvas.toDataURL('image/png');$('photoPreview').src=lastPhotoURL;$('photoDownload').href=lastPhotoURL;$('photoDownload').download='little-room-photo-'+Date.now()+'.png';$('photoDialog').showModal();select(old)}
-function resetGame(){if(pendingMode==='challenge'&&!contractUnlocked(pendingContract)){toast('先完成基础委托积累经验，再接取这份委托');return}if(pendingMode==='challenge'&&pendingRound===2&&!library.badges.includes(pendingContract)){toast('首次完成这份委托后即可解锁二周目');return}if(library.slots.length>=12){toast('作品集已有 12 个作品，请先备份并删除一个空位');return}cancelPlacement();tutorial=null;renderTutorial();if(currentSlot())persist(true);state={layout:pendingMode==='challenge'?R.contracts[pendingContract].layout:pendingLayout,mode:pendingMode,contract:pendingContract,round:pendingMode==='challenge'?pendingRound:1,roundRules:2,furniture:[],wall:'#e8e5d7',floor:'#c7aa80',night:false,curtains:false};const name=state.mode==='challenge'?R.contracts[pendingContract].name+(state.round===2?' · 二周目':''):layouts.find(l=>l.id===state.layout).name;const slot={id:uid(),name,state:clone(state),thumb:'',updated:Date.now()};library.slots.push(slot);library.activeId=slot.id;history=[];future=[];selected=null;scoreCache=null;angle=Math.PI/4;zoom=1;topView=false;room();commit();cameraUpdate();renderSurfaces();renderProducts();$('welcome').close();if(!library.tutorialDone&&state.mode==='challenge'&&state.contract==='coder')startTutorial();else toast('新作品已创建，旧作品留在作品集里')}
-function renderContracts(){const host=$('contractOptions');host.hidden=pendingMode!=='challenge';host.innerHTML='';for(const[id,c]of Object.entries(R.contracts)){const b=document.createElement('button'),stars=library.stars[id]||0;b.className='contract-card'+(pendingContract===id?' active':'');b.innerHTML=`<span class="contract-number">${String(Object.keys(R.contracts).indexOf(id)+1).padStart(2,'0')} / DESIGN BRIEF</span><strong>${c.name}${contractUnlocked(id)?'':' · Lv.'+c.level+' 解锁'}</strong><small>${c.client}</small><p>${c.story}</p><span>预算 ¥${c.budget.toLocaleString()} · ${layouts.find(l=>l.id===c.layout).name}</span>${library.badges.includes(id)?`<em class="contract-stars">${'★'.repeat(stars)}${'☆'.repeat(3-stars)} · 二周目已解锁</em>`:''}`;b.onclick=()=>{if(!contractUnlocked(id)){toast('需要 Lv.'+c.level+'：完成不同委托，每份可获得 100 经验');return}pendingContract=id;pendingLayout=c.layout;renderContracts();renderLayouts()};host.append(b)}renderRoundOptions()}
-function openLayouts(){cancelPlacement();pendingLayout=state.layout;pendingMode=state.mode;pendingContract=state.contract||'coder';pendingRound=state.round||1;renderLayouts();renderContracts();$$('[data-mode]').forEach(b=>b.classList.toggle('active',b.dataset.mode===pendingMode));$('continueBtn').hidden=false;$('welcome').showModal()}
-function openLibrary(){cancelPlacement();persist(true);renderLibrary();$('library').showModal()}
-function renderLibrary(){try{$('restorePreviousBtn').disabled=!localStorage.getItem('little-room-recovery-portfolio')}catch{$('restorePreviousBtn').disabled=true}const host=$('libraryList');host.innerHTML='';$('designName').value=currentSlot()?.name||'';$('libraryCount').textContent=library.slots.length+' / 12 件作品 · 自动保存当前作品';$('badgeShelf').textContent=library.badges.length?'成就收藏  '+library.badges.map(id=>'✦ '+(R.contracts[id]?.badge||'自由造梦家')).join('　'):'完成委托，收集你的第一枚设计徽章。';for(const slot of [...library.slots].sort((a,b)=>b.updated-a.updated)){const card=document.createElement('article');card.className='saved-card'+(slot.id===library.activeId?' current':'');const img=document.createElement('img');img.src=slot.thumb||'';img.alt=slot.name+'缩略图';const title=document.createElement('h3');title.textContent=slot.name;const meta=document.createElement('p');meta.textContent=layouts.find(l=>l.id===slot.state.layout).name+' · '+slot.state.furniture.length+' 件家具'+(slot.id===library.activeId?' · 当前作品':'');const row=document.createElement('div');const open=document.createElement('button');open.textContent=slot.id===library.activeId?'继续布置':'打开作品';open.onclick=()=>{persist();library.activeId=slot.id;history=[];future=[];restoreState(slot.state);persist();$('library').close();toast('已打开「'+slot.name+'」')};const remove=document.createElement('button');remove.textContent='删除';remove.disabled=slot.id===library.activeId;remove.title=remove.disabled?'请先切换到其他作品再删除':'删除此作品';remove.onclick=()=>ask('删除「'+slot.name+'」？','此作品会从作品集移除。建议先导出存档；此操作无法撤销。',()=>{library.slots=library.slots.filter(s=>s.id!==slot.id);writeLibrary();renderLibrary()});row.append(open,remove);card.append(img,title,meta,row);host.append(card)}}
-function saveAs(){if(library.slots.length>=12){toast('作品集已满，请先导出并腾出位置');return}persist();const name=$('designName').value.trim().slice(0,28)||'我的理想小屋';const slot={id:uid(),name,state:clone(state),thumb:thumbnail(),updated:Date.now()};library.slots.push(slot);library.activeId=slot.id;history=[];future=[];persist();updateUI();renderLibrary();toast('已另存为新作品')}
-function downloadJSON(data,name){const blob=new Blob([JSON.stringify(data,null,2)],{type:'application/json'}),url=URL.createObjectURL(blob),a=document.createElement('a');a.href=url;a.download=name;a.click();setTimeout(()=>URL.revokeObjectURL(url),30000);toast('已发起存档下载；请在浏览器下载列表查看')}
-function exportSave(){persist(true);const data={format:'little-room',version:5,progress:{badges:library.badges,stars:library.stars},exportedAt:new Date().toISOString(),name:currentSlot()?.name||'我的小屋',state:clone(state)};downloadJSON(data,'little-room-design-'+Date.now()+'.json')}
-async function importSave(file){if(!file)return;if(file.size>1000000){toast('存档文件过大，最多支持 1 MB');return}try{const raw=JSON.parse(await file.text());if(raw.format!=='little-room'||![2,3,4,5].includes(raw.version))throw Error('请选择本游戏导出的 v2–v5 存档');const imported=R.validate(raw.state,byId,layouts);if(library.slots.length>=12)throw Error('作品集已满，请先腾出一个位置');persist();const slot={id:uid(),name:typeof raw.name==='string'?raw.name.slice(0,28):'导入的作品',state:imported,updated:Date.now(),thumb:''};library.slots.push(slot);library.activeId=slot.id;if(raw.version>=3)mergeProgress(raw.progress);history=[];future=[];restoreState(imported);renderProducts();persist();renderLibrary();toast('存档已导入为新作品，原作品已保留')}catch(e){toast('无法导入：'+e.message)}finally{$('importInput').value=''}}
-function exportPortfolio(){persist(true);downloadJSON({format:'little-room-library',version:1,exportedAt:new Date().toISOString(),library:clone(library)},'little-room-portfolio-'+new Date().toISOString().slice(0,10)+'.json')}
-function validatePortfolio(raw){if(raw?.format!=='little-room-library'||raw.version!==1||!Array.isArray(raw.library?.slots)||raw.library.slots.length<1||raw.library.slots.length>12)throw Error('不是有效的整个作品集备份');const slots=[],ids=new Set();for(const slot of raw.library.slots){if(!slot||typeof slot.id!=='string'||!slot.id||slot.id.length>100||ids.has(slot.id))throw Error('作品编号缺失或重复');ids.add(slot.id);slots.push({id:slot.id,name:String(slot.name||'未命名作品').slice(0,28),state:R.validate(slot.state,byId,layouts),updated:Number(slot.updated)||Date.now(),thumb:typeof slot.thumb==='string'&&slot.thumb.startsWith('data:image/jpeg;base64,')&&slot.thumb.length<150000?slot.thumb:''})}const badges=Array.isArray(raw.library.badges)?raw.library.badges.filter(id=>id==='free'||R.contracts[id]):[];return {version:2,slots,activeId:ids.has(raw.library.activeId)?raw.library.activeId:slots[0].id,badges:[...new Set(badges)],stars:cleanStars(raw.library.stars),tutorialDone:!!raw.library.tutorialDone,tutorialProgress:cleanTutorial(raw.library.tutorialProgress,slots)}}
-async function importPortfolio(file){if(!file)return;if(file.size>5000000){toast('备份文件过大，最多支持 5 MB');return}try{pendingPortfolioImport=validatePortfolio(JSON.parse(await file.text()));$('portfolioSummary').textContent='备份含 '+pendingPortfolioImport.slots.length+' 件作品；当前有 '+library.slots.length+' 件。合并会为导入作品分配新编号，保留双方成长记录。';$('portfolioMerge').disabled=library.slots.length+pendingPortfolioImport.slots.length>12;$('portfolioCapacity').textContent=$('portfolioMerge').disabled?'合并后超过 12 件，请先腾出空位，或选择替换。':'合并后共 '+(library.slots.length+pendingPortfolioImport.slots.length)+' 件作品。';$('portfolioImport').showModal()}catch(e){toast('无法恢复：'+e.message)}finally{$('importAllInput').value=''}}
-function mergeLibraries(current,incoming){if(current.slots.length+incoming.slots.length>12)throw Error('合并后超过 12 件作品');const next=clone(current),used=new Set(next.slots.map(s=>s.id));for(const slot of incoming.slots){let id;do{id=uid()}while(used.has(id));used.add(id);next.slots.push({...clone(slot),id})}next.badges=[...new Set([...next.badges,...incoming.badges])];for(const[id,n]of Object.entries(incoming.stars))next.stars[id]=Math.max(next.stars[id]||0,n);return next}
-function replacePortfolio(next){
-  persist(true);clearTimeout(thumbDebounce);clearTimeout(saveDebounce);
-  // Save the rollback copy before replacing the active key. A quota error leaves the live collection intact.
-  try{localStorage.setItem('little-room-recovery-portfolio',JSON.stringify(library));localStorage.setItem('little-room-library-v2',JSON.stringify(next))}catch(e){toast('没有替换作品集：存储空间不足，请先导出备份。');return false}
-  library=next;history=[];future=[];restoreState(currentSlot().state);renderLibrary();return true;
+function updateGhost() {
+  requestFrame();
+  if (!placement) return;
+  drawGuides();
+  const f = placement.f;
+  ghost.position.set(f.x, f.y || 0.03, f.z);
+  ghost.rotation.y = (f.rot * Math.PI) / 2;
+  const why = placement.hasPoint ? reason(f) : "请移到可以摆放的墙面或桌面";
+  ghost.traverse((o) => {
+    if (o.material && !o.userData.decor) for (const m of [].concat(o.material)) {
+      m.color.set(why ? "#dc7c64" : "#a1c67c");
+      if (m.emissive) m.emissive.set("#000000");
+      m.map = null;
+    }
+  });
+  ghost.visible = placement.hasPoint;
+  $("placementText").textContent = why || placement.snapLabel || "可以放置 · " + byId[f.type].name;
+  $("placement").classList.toggle("invalid", !!why);
+  return !why;
 }
-function applyPortfolio(mode){if(!pendingPortfolioImport)return;try{const next=mode==='merge'?mergeLibraries(library,pendingPortfolioImport):pendingPortfolioImport;if(replacePortfolio(next)){pendingPortfolioImport=null;$('portfolioImport').close();toast('已'+(mode==='merge'?'合并':'替换')+'作品集；可用「恢复上一次作品集」撤回')}}catch(e){toast(e.message)}}
-function restorePreviousPortfolio(){try{const saved=localStorage.getItem('little-room-recovery-portfolio');if(!saved){toast('还没有可恢复的本机副本');return}const previous=validatePortfolio({format:'little-room-library',version:1,library:JSON.parse(saved)});ask('恢复上一次作品集？','将恢复 '+previous.slots.length+' 件作品；现在的作品集会成为新的恢复副本。',()=>{if(replacePortfolio(previous))toast('已恢复上一次作品集，当前版本也已保留为副本')})}catch(e){toast('恢复副本无法读取：'+e.message)}}
-function renderDesignTips(result){const host=$('designTips');host.replaceChildren();for(const text of result.tips){const row=document.createElement('p');row.textContent=text;const detail=result.space.details?.find(d=>d.message===text);if(detail?.ids.length){const button=document.createElement('button');button.textContent='定位家具';button.onclick=()=>{$('result').close();const f=state.furniture.find(f=>f.id===detail.ids[0]);if(f){angle=Math.PI/4;elevation=1.1;zoom=1;topView=false;cameraUpdate();select(f.id);toast(text)}};row.append(button)}host.append(row)}}
+function cancelPlacement() {
+  requestFrame();
+  clearGuides();
+  if (ghost) {
+    scene.remove(ghost);
+    disposeGroup(ghost);
+    ghost = null;
+  }
+  if (placement?.existing) for (const g of furnitureGroup.children) g.visible = true;
+  placement = null;
+  $("placement").hidden = true;
+  $("hint").textContent = hintText();
+  updateSelection();
+}
+function place() {
+  if (!placement?.hasPoint) return;
+  const why = reason(placement.f);
+  if (why) {
+    toast(why);
+    return;
+  }
+  const f = { ...placement.f },
+    repeat = $("repeatPlace").checked && !placement.existing;
+  checkpoint();
+  state.furniture = placement.existing ? R.transformFamily(placement.original, f, state) : [...state.furniture, f];
+  cancelPlacement();
+  selected = f.id;
+  commit();
+  toast("已安放 · " + byId[f.type].name);
+  tutorialAction(f.type === "pendant" && f.parentId ? "lamp" : f.type);
+  if (repeat) {
+    startPlacement(f.type);
+    if (placement) {
+      placement.f.color = f.color;
+      placement.f.rot = f.rot;
+    }
+  }
+}
+function rotate() {
+  if (placement) {
+    if (byId[placement.f.type].mount === "wall") return;
+    placement.f.rot = normalizedRotation(placement.f.rot + Number($("angleStep").value) / 90);
+    updateGhost();
+    return;
+  }
+  const f = state.furniture.find((x) => x.id === selected);
+  if (!f || byId[f.type].mount === "wall") return;
+  const next = { ...f, rot: normalizedRotation(f.rot + Number($("angleStep").value) / 90) },
+    why = reason(next);
+  if (why) {
+    toast(why);
+    return;
+  }
+  checkpoint();
+  state.furniture = R.transformFamily(f, next, state);
+  commit();
+  tutorialAction("rotate");
+}
+function remove() {
+  if (!selected) return;
+  const f = state.furniture.find((f) => f.id === selected),
+    ids = R.familyIds(f, state),
+    attached = ids.size - 1;
+  checkpoint();
+  state.furniture = state.furniture.filter((x) => !ids.has(x.id));
+  selected = null;
+  commit();
+  toast(attached ? "组合与附属摆件共 " + (attached + 1) + " 件已收起，可撤销" : "家具已收起，费用已退回");
+}
+function goalHTML() {
+  return goals()
+    .map(
+      ([name, done]) =>
+        `<div class="goal ${done ? "done" : ""}"><span class="check">${done ? "✓" : ""}</span>${name}</div>`,
+    )
+    .join("");
+}
+function updateUI() {
+  const gs = goals(),
+    count = gs.filter((x) => x[1]).length;
+  $("goals").innerHTML = goalHTML();
+  $("progress").style.width = (count / gs.length) * 100 + "%";
+  $("progressText").textContent = `${count} / ${gs.length} 个生活心愿`;
+  $("placedCount").textContent = state.furniture.length;
+  $("budgetLabel").innerHTML =
+    state.mode === "challenge"
+      ? `剩余预算 <b>¥ ${(budget() - total()).toLocaleString()}</b>`
+      : `已花费 <b>¥ ${total().toLocaleString()}</b>`;
+  $("modeLabel").textContent = state.mode === "free" ? "自由创作" : state.round === 2 ? "进阶二周目" : "设计委托";
+  const c = R.contracts[state.contract] || R.contracts.coder;
+  $("briefTitle").textContent =
+    state.mode === "free" ? "让空房间，成为家" : c.name + (state.round === 2 ? " · 二周目" : "");
+  $("briefText").textContent =
+    state.mode === "free"
+      ? "留出通道，再添一些自己的个性。"
+      : c.story +
+        (state.round === 2
+          ? state.roundRules === 2
+            ? " 进阶预算 ¥" + budget().toLocaleString() + "。" + R.encoreText[state.contract] + "；空间关系至少 85 分。"
+            : " 旧版进阶规则：主色不超过三种，空间关系至少 85 分。"
+          : "");
+  $("undoBtn").disabled = !history.length;
+  $("redoBtn").disabled = !future.length;
+  $("sceneTitle").textContent = currentSlot()?.name || layouts.find((l) => l.id === state.layout).name;
+  $("roomTitle").textContent =
+    (currentSlot()?.name || "我的理想小屋") + " · " + layouts.find((l) => l.id === state.layout).name;
+  updateSelection();
+  updateProgressUI();
+}
+function assessment() {
+  return scoreCache || (scoreCache = R.evaluate(state, byId, layouts));
+}
+function finish() {
+  cancelPlacement();
+  select(null);
+  if (tutorial) tutorialAction("finish");
+  const result = assessment();
+  $("resultTitle").textContent = result.complete ? "把日子，过成喜欢的样子。" : "好生活，值得再打磨一点。";
+  $("resultText").textContent =
+    (result.complete ? "设计完成！" : "设计建议已准备好。") +
+    " 生活需求、动线和基本空间关系是完成条件；具体进阶要求见下方目标。";
+  $("resultStats").innerHTML =
+    `<div><strong>${result.score}</strong><span>设计灵感分 / 100</span></div><div><strong>${state.furniture.length}</strong><span>件心选好物</span></div><div><strong>¥${total().toLocaleString()}</strong><span>装修花费</span></div>`;
+  $("resultGoals").innerHTML = goalHTML();
+  $("scoreBars").innerHTML = result.metrics
+    .map(
+      ([label, value]) =>
+        `<div><span>${label}</span><i><b style="width:${value}%"></b></i><strong>${value}</strong></div>`,
+    )
+    .join("");
+  $("starGoals").innerHTML =
+    state.mode === "challenge"
+      ? result.starGoals
+          .map(([label, done]) => `<div class="${done ? "done" : ""}"><span>${done ? "★" : "☆"}</span>${label}</div>`)
+          .join("")
+      : "";
+  renderDesignTips(result);
+  let changed = false,
+    xp = 0;
+  if (result.complete) {
+    const badge = state.mode === "challenge" ? state.contract : "free";
+    if (!library.badges.includes(badge)) {
+      library.badges.push(badge);
+      xp = badge === "free" ? 0 : 100;
+      changed = true;
+    }
+    if (state.mode === "challenge" && result.stars > (library.stars[state.contract] || 0)) {
+      library.stars[state.contract] = result.stars;
+      changed = true;
+    }
+    if (changed) {
+      persist();
+      renderProducts();
+      renderSurfaces();
+      updateProgressUI();
+    }
+  }
+  const best = state.mode === "challenge" ? library.stars[state.contract] || 0 : 0;
+  $("earnedBadge").textContent = result.complete
+    ? state.mode === "challenge"
+      ? "✦ " +
+        R.contracts[state.contract].badge +
+        " · 本次 " +
+        result.stars +
+        " 星 / 历史最佳 " +
+        "★".repeat(best) +
+        "☆".repeat(3 - best) +
+        (xp ? " · +" + xp + " 经验" : " · 最佳成绩已记录")
+      : "✦ 获得徽章 · 自由造梦家"
+    : "继续调整，完成心愿、动线和基本空间关系，即可获得徽章";
+  $("result").showModal();
+}
+function photo() {
+  cancelPlacement();
+  const old = selected;
+  select(null);
+  renderer.render(scene, camera);
+  const canvas = document.createElement("canvas");
+  canvas.width = 1600;
+  canvas.height = 1200;
+  const ctx = canvas.getContext("2d");
+  ctx.fillStyle = state.night ? "#47575c" : "#eeeee6";
+  ctx.fillRect(0, 0, 1600, 1200);
+  const source = renderer.domElement,
+    ratio = Math.min(1600 / source.width, 1050 / source.height),
+    w = source.width * ratio,
+    h = source.height * ratio;
+  ctx.drawImage(source, (1600 - w) / 2, (1050 - h) / 2, w, h);
+  ctx.fillStyle = state.night ? "#f6f3e6" : "#526449";
+  ctx.font = "40px Microsoft YaHei, sans-serif";
+  ctx.fillText("住进理想 / " + (currentSlot()?.name || "我的小屋").slice(0, 22), 70, 1110);
+  ctx.font = "19px Microsoft YaHei, sans-serif";
+  ctx.fillText("LITTLE ROOM STUDIO · " + state.furniture.length + " 件心选好物 · DESIGN YOUR EVERYDAY", 73, 1150);
+  lastPhotoURL = canvas.toDataURL("image/png");
+  $("photoPreview").src = lastPhotoURL;
+  $("photoDownload").href = lastPhotoURL;
+  $("photoDownload").download = "little-room-photo-" + Date.now() + ".png";
+  $("photoDialog").showModal();
+  select(old);
+}
+function resetGame() {
+  if (pendingMode === "challenge" && !contractUnlocked(pendingContract)) {
+    toast("先完成基础委托积累经验，再接取这份委托");
+    return;
+  }
+  if (pendingMode === "challenge" && pendingRound === 2 && !library.badges.includes(pendingContract)) {
+    toast("首次完成这份委托后即可解锁二周目");
+    return;
+  }
+  if (library.slots.length >= 12) {
+    toast("作品集已有 12 个作品，请先备份并删除一个空位");
+    return;
+  }
+  cancelPlacement();
+  tutorial = null;
+  renderTutorial();
+  if (currentSlot()) persist(true);
+  state = {
+    layout: pendingMode === "challenge" ? R.contracts[pendingContract].layout : pendingLayout,
+    mode: pendingMode,
+    contract: pendingContract,
+    round: pendingMode === "challenge" ? pendingRound : 1,
+    roundRules: 2,
+    furniture: [],
+    wall: "#e8e5d7",
+    floor: "#c7aa80",
+    night: false,
+    curtains: false,
+  };
+  const name =
+    state.mode === "challenge"
+      ? R.contracts[pendingContract].name + (state.round === 2 ? " · 二周目" : "")
+      : layouts.find((l) => l.id === state.layout).name;
+  const slot = { id: uid(), name, state: clone(state), thumb: "", updated: Date.now() };
+  library.slots.push(slot);
+  library.activeId = slot.id;
+  history = [];
+  future = [];
+  selected = null;
+  scoreCache = null;
+  room();
+  frameLayout(true);
+  commit();
+  renderSurfaces();
+  renderProducts();
+  $("welcome").close();
+  if (!library.tutorialDone && state.mode === "challenge" && state.contract === "coder") startTutorial();
+  else toast("新作品已创建，旧作品留在作品集里");
+}
+function renderContracts() {
+  const host = $("contractOptions");
+  host.hidden = pendingMode !== "challenge";
+  host.innerHTML = "";
+  for (const [id, c] of Object.entries(R.contracts)) {
+    const b = document.createElement("button"),
+      stars = library.stars[id] || 0;
+    b.className = "contract-card" + (pendingContract === id ? " active" : "");
+    b.innerHTML = `<span class="contract-number">${String(Object.keys(R.contracts).indexOf(id) + 1).padStart(2, "0")} / DESIGN BRIEF</span><strong>${c.name}${contractUnlocked(id) ? "" : " · Lv." + c.level + " 解锁"}</strong><small>${c.client}</small><p>${c.story}</p><span>预算 ¥${c.budget.toLocaleString()} · ${layouts.find((l) => l.id === c.layout).name}</span>${library.badges.includes(id) ? `<em class="contract-stars">${"★".repeat(stars)}${"☆".repeat(3 - stars)} · 二周目已解锁</em>` : ""}`;
+    b.onclick = () => {
+      if (!contractUnlocked(id)) {
+        toast("需要 Lv." + c.level + "：完成不同委托，每份可获得 100 经验");
+        return;
+      }
+      pendingContract = id;
+      pendingLayout = c.layout;
+      renderContracts();
+      renderLayouts();
+    };
+    host.append(b);
+  }
+  renderRoundOptions();
+}
+function openLayouts() {
+  cancelPlacement();
+  pendingLayout = state.layout;
+  pendingMode = state.mode;
+  pendingContract = state.contract || "coder";
+  pendingRound = state.round || 1;
+  renderLayouts();
+  renderContracts();
+  $$("[data-mode]").forEach((b) => b.classList.toggle("active", b.dataset.mode === pendingMode));
+  $("continueBtn").hidden = false;
+  $("welcome").showModal();
+}
+function openLibrary() {
+  cancelPlacement();
+  persist(true);
+  renderLibrary();
+  $("library").showModal();
+}
+function renderLibrary() {
+  try {
+    $("restorePreviousBtn").disabled = !localStorage.getItem("little-room-recovery-portfolio");
+  } catch {
+    $("restorePreviousBtn").disabled = true;
+  }
+  const host = $("libraryList");
+  host.innerHTML = "";
+  $("designName").value = currentSlot()?.name || "";
+  $("libraryCount").textContent = library.slots.length + " / 12 件作品 · 自动保存当前作品";
+  $("badgeShelf").textContent = library.badges.length
+    ? "成就收藏  " + library.badges.map((id) => "✦ " + (R.contracts[id]?.badge || "自由造梦家")).join("　")
+    : "完成委托，收集你的第一枚设计徽章。";
+  for (const slot of [...library.slots].sort((a, b) => b.updated - a.updated)) {
+    const card = document.createElement("article");
+    card.className = "saved-card" + (slot.id === library.activeId ? " current" : "");
+    const img = document.createElement("img");
+    img.src = slot.thumb || "";
+    img.alt = slot.name + "缩略图";
+    const title = document.createElement("h3");
+    title.textContent = slot.name;
+    const meta = document.createElement("p");
+    meta.textContent =
+      layouts.find((l) => l.id === slot.state.layout).name +
+      " · " +
+      slot.state.furniture.length +
+      " 件家具" +
+      (slot.id === library.activeId ? " · 当前作品" : "");
+    const row = document.createElement("div");
+    const open = document.createElement("button");
+    open.textContent = slot.id === library.activeId ? "继续布置" : "打开作品";
+    open.onclick = () => {
+      persist();
+      library.activeId = slot.id;
+      history = [];
+      future = [];
+      restoreState(slot.state);
+      persist();
+      $("library").close();
+      toast("已打开「" + slot.name + "」");
+    };
+    const remove = document.createElement("button");
+    remove.textContent = "删除";
+    remove.disabled = slot.id === library.activeId;
+    remove.title = remove.disabled ? "请先切换到其他作品再删除" : "删除此作品";
+    remove.onclick = () =>
+      ask("删除「" + slot.name + "」？", "此作品会从作品集移除。建议先导出存档；此操作无法撤销。", () => {
+        library.slots = library.slots.filter((s) => s.id !== slot.id);
+        writeLibrary();
+        renderLibrary();
+      });
+    row.append(open, remove);
+    card.append(img, title, meta, row);
+    host.append(card);
+  }
+}
+function saveAs() {
+  if (library.slots.length >= 12) {
+    toast("作品集已满，请先导出并腾出位置");
+    return;
+  }
+  persist();
+  const name = $("designName").value.trim().slice(0, 28) || "我的理想小屋";
+  const slot = { id: uid(), name, state: clone(state), thumb: thumbnail(), updated: Date.now() };
+  library.slots.push(slot);
+  library.activeId = slot.id;
+  history = [];
+  future = [];
+  persist();
+  updateUI();
+  renderLibrary();
+  toast("已另存为新作品");
+}
+function downloadJSON(data, name) {
+  const blob = new Blob([JSON.stringify(data, null, 2)], { type: "application/json" }),
+    url = URL.createObjectURL(blob),
+    a = document.createElement("a");
+  a.href = url;
+  a.download = name;
+  a.click();
+  setTimeout(() => URL.revokeObjectURL(url), 30000);
+  toast("已发起存档下载；请在浏览器下载列表查看");
+}
+function exportSave() {
+  persist(true);
+  const data = {
+    format: "little-room",
+    version: 5,
+    progress: { badges: library.badges, stars: library.stars },
+    exportedAt: new Date().toISOString(),
+    name: currentSlot()?.name || "我的小屋",
+    state: clone(state),
+  };
+  downloadJSON(data, "little-room-design-" + Date.now() + ".json");
+}
+async function importSave(file) {
+  if (!file) return;
+  if (file.size > 1000000) {
+    toast("存档文件过大，最多支持 1 MB");
+    return;
+  }
+  try {
+    const raw = JSON.parse(await file.text());
+    if (raw.format !== "little-room" || ![2, 3, 4, 5].includes(raw.version))
+      throw Error("请选择本游戏导出的 v2–v5 存档");
+    const { state: imported, removed } = R.repair(raw.state, byId, layouts);
+    if (removed) toast("户型已更新为纽约真实格局，" + removed + " 件放不下的家具已收起");
+    if (library.slots.length >= 12) throw Error("作品集已满，请先腾出一个位置");
+    persist();
+    const slot = {
+      id: uid(),
+      name: typeof raw.name === "string" ? raw.name.slice(0, 28) : "导入的作品",
+      state: imported,
+      updated: Date.now(),
+      thumb: "",
+    };
+    library.slots.push(slot);
+    library.activeId = slot.id;
+    if (raw.version >= 3) mergeProgress(raw.progress);
+    history = [];
+    future = [];
+    restoreState(imported);
+    renderProducts();
+    persist();
+    renderLibrary();
+    toast("存档已导入为新作品，原作品已保留");
+  } catch (e) {
+    toast("无法导入：" + e.message);
+  } finally {
+    $("importInput").value = "";
+  }
+}
+function exportPortfolio() {
+  persist(true);
+  downloadJSON(
+    { format: "little-room-library", version: 1, exportedAt: new Date().toISOString(), library: clone(library) },
+    "little-room-portfolio-" + new Date().toISOString().slice(0, 10) + ".json",
+  );
+}
+function validatePortfolio(raw) {
+  if (
+    raw?.format !== "little-room-library" ||
+    raw.version !== 1 ||
+    !Array.isArray(raw.library?.slots) ||
+    raw.library.slots.length < 1 ||
+    raw.library.slots.length > 12
+  )
+    throw Error("不是有效的整个作品集备份");
+  const slots = [],
+    ids = new Set();
+  for (const slot of raw.library.slots) {
+    if (!slot || typeof slot.id !== "string" || !slot.id || slot.id.length > 100 || ids.has(slot.id))
+      throw Error("作品编号缺失或重复");
+    ids.add(slot.id);
+    slots.push({
+      id: slot.id,
+      name: String(slot.name || "未命名作品").slice(0, 28),
+      state: R.repair(slot.state, byId, layouts).state,
+      updated: Number(slot.updated) || Date.now(),
+      thumb:
+        typeof slot.thumb === "string" && slot.thumb.startsWith("data:image/jpeg;base64,") && slot.thumb.length < 150000
+          ? slot.thumb
+          : "",
+    });
+  }
+  const badges = Array.isArray(raw.library.badges)
+    ? raw.library.badges.filter((id) => id === "free" || R.contracts[id])
+    : [];
+  return {
+    version: 2,
+    slots,
+    activeId: ids.has(raw.library.activeId) ? raw.library.activeId : slots[0].id,
+    badges: [...new Set(badges)],
+    stars: cleanStars(raw.library.stars),
+    tutorialDone: !!raw.library.tutorialDone,
+    tutorialProgress: cleanTutorial(raw.library.tutorialProgress, slots),
+  };
+}
+async function importPortfolio(file) {
+  if (!file) return;
+  if (file.size > 5000000) {
+    toast("备份文件过大，最多支持 5 MB");
+    return;
+  }
+  try {
+    pendingPortfolioImport = validatePortfolio(JSON.parse(await file.text()));
+    $("portfolioSummary").textContent =
+      "备份含 " +
+      pendingPortfolioImport.slots.length +
+      " 件作品；当前有 " +
+      library.slots.length +
+      " 件。合并会为导入作品分配新编号，保留双方成长记录。";
+    $("portfolioMerge").disabled = library.slots.length + pendingPortfolioImport.slots.length > 12;
+    $("portfolioCapacity").textContent = $("portfolioMerge").disabled
+      ? "合并后超过 12 件，请先腾出空位，或选择替换。"
+      : "合并后共 " + (library.slots.length + pendingPortfolioImport.slots.length) + " 件作品。";
+    $("portfolioImport").showModal();
+  } catch (e) {
+    toast("无法恢复：" + e.message);
+  } finally {
+    $("importAllInput").value = "";
+  }
+}
+function mergeLibraries(current, incoming) {
+  if (current.slots.length + incoming.slots.length > 12) throw Error("合并后超过 12 件作品");
+  const next = clone(current),
+    used = new Set(next.slots.map((s) => s.id));
+  for (const slot of incoming.slots) {
+    let id;
+    do {
+      id = uid();
+    } while (used.has(id));
+    used.add(id);
+    next.slots.push({ ...clone(slot), id });
+  }
+  next.badges = [...new Set([...next.badges, ...incoming.badges])];
+  for (const [id, n] of Object.entries(incoming.stars)) next.stars[id] = Math.max(next.stars[id] || 0, n);
+  return next;
+}
+function replacePortfolio(next) {
+  persist(true);
+  clearTimeout(thumbDebounce);
+  clearTimeout(saveDebounce);
+  // Save the rollback copy before replacing the active key. A quota error leaves the live collection intact.
+  try {
+    localStorage.setItem("little-room-recovery-portfolio", JSON.stringify(library));
+    localStorage.setItem("little-room-library-v2", JSON.stringify(next));
+  } catch (e) {
+    toast("没有替换作品集：存储空间不足，请先导出备份。");
+    return false;
+  }
+  library = next;
+  history = [];
+  future = [];
+  restoreState(currentSlot().state);
+  renderLibrary();
+  return true;
+}
+function applyPortfolio(mode) {
+  if (!pendingPortfolioImport) return;
+  try {
+    const next = mode === "merge" ? mergeLibraries(library, pendingPortfolioImport) : pendingPortfolioImport;
+    if (replacePortfolio(next)) {
+      pendingPortfolioImport = null;
+      $("portfolioImport").close();
+      toast("已" + (mode === "merge" ? "合并" : "替换") + "作品集；可用「恢复上一次作品集」撤回");
+    }
+  } catch (e) {
+    toast(e.message);
+  }
+}
+function restorePreviousPortfolio() {
+  try {
+    const saved = localStorage.getItem("little-room-recovery-portfolio");
+    if (!saved) {
+      toast("还没有可恢复的本机副本");
+      return;
+    }
+    const previous = validatePortfolio({ format: "little-room-library", version: 1, library: JSON.parse(saved) });
+    ask("恢复上一次作品集？", "将恢复 " + previous.slots.length + " 件作品；现在的作品集会成为新的恢复副本。", () => {
+      if (replacePortfolio(previous)) toast("已恢复上一次作品集，当前版本也已保留为副本");
+    });
+  } catch (e) {
+    toast("恢复副本无法读取：" + e.message);
+  }
+}
+function renderDesignTips(result) {
+  const host = $("designTips");
+  host.replaceChildren();
+  for (const text of result.tips) {
+    const row = document.createElement("p");
+    row.textContent = text;
+    const detail = result.space.details?.find((d) => d.message === text);
+    if (detail?.ids.length) {
+      const button = document.createElement("button");
+      button.textContent = "定位家具";
+      button.onclick = () => {
+        $("result").close();
+        const f = state.furniture.find((f) => f.id === detail.ids[0]);
+        if (f) {
+          focusOn(f.x, f.z);
+          select(f.id);
+          toast(text);
+        }
+      };
+      row.append(button);
+    }
+    host.append(row);
+  }
+}

@@ -1,0 +1,104 @@
+{
+  "format": "little-room",
+  "version": 5,
+  "name": "日光里的工作室 · 示范",
+  "state": {
+    "layout": "studio",
+    "contract": "coder",
+    "mode": "challenge",
+    "round": 1,
+    "roundRules": 2,
+    "night": false,
+    "curtains": false,
+    "wall": "#e8e5d7",
+    "floor": "#c7aa80",
+    "furniture": [
+      {
+        "id": "demo-1",
+        "type": "desk",
+        "x": -2.2,
+        "z": -2.4,
+        "rot": 0,
+        "y": 0.03,
+        "color": "#c59d70"
+      },
+      {
+        "id": "demo-2",
+        "type": "stool",
+        "x": -2.2,
+        "z": -1.55,
+        "rot": 2,
+        "y": 0.03,
+        "color": "#b8c49c"
+      },
+      {
+        "id": "demo-3",
+        "type": "pendant",
+        "x": -2.6500000000000004,
+        "z": -2.4499999999999997,
+        "rot": 0,
+        "y": 0.8150000000000001,
+        "color": "#e8d7b1",
+        "parentId": "demo-1"
+      },
+      {
+        "id": "demo-4",
+        "type": "books",
+        "x": -1.85,
+        "z": -2.48,
+        "rot": 0,
+        "y": 0.8150000000000001,
+        "color": "#a3b6bd",
+        "parentId": "demo-1"
+      },
+      {
+        "id": "demo-5",
+        "type": "bed",
+        "x": -2.45,
+        "z": 1.55,
+        "rot": 1,
+        "y": 0.03,
+        "color": "#e3cbb1"
+      },
+      {
+        "id": "demo-6",
+        "type": "shelf",
+        "x": -0.9,
+        "z": -2.72,
+        "rot": 0,
+        "y": 0.03,
+        "color": "#c59d70"
+      },
+      {
+        "id": "demo-7",
+        "type": "plant",
+        "x": 1.45,
+        "z": -2.45,
+        "rot": 0,
+        "y": 0.03,
+        "color": "#7b9364"
+      },
+      {
+        "id": "demo-8",
+        "type": "sofa",
+        "x": 0,
+        "z": 1.7,
+        "rot": 2,
+        "y": 0.03,
+        "color": "#b8c49c"
+      },
+      {
+        "id": "demo-9",
+        "type": "rug",
+        "x": 0,
+        "z": 0.3,
+        "rot": 0,
+        "y": 0.03,
+        "color": "#e1ceb0"
+      }
+    ]
+  },
+  "progress": {
+    "badges": []
+  }
+}

@@ -1,0 +1,103 @@
+{
+  "format": "little-room",
+  "version": 5,
+  "name": "预算里的小确幸 · 示范",
+  "state": {
+    "layout": "loft",
+    "contract": "rental",
+    "mode": "challenge",
+    "round": 1,
+    "roundRules": 2,
+    "night": false,
+    "curtains": false,
+    "wall": "#e8e5d7",
+    "floor": "#c7aa80",
+    "furniture": [
+      {
+        "id": "demo-22",
+        "type": "bed",
+        "x": -1.65,
+        "z": -0.85,
+        "rot": 1,
+        "y": 0.03,
+        "color": "#e3cbb1"
+      },
+      {
+        "id": "demo-23",
+        "type": "shelf",
+        "x": 2.52,
+        "z": -0.4,
+        "rot": 3,
+        "y": 0.03,
+        "color": "#c59d70"
+      },
+      {
+        "id": "demo-21",
+        "type": "desk",
+        "x": 1.4,
+        "z": -2.95,
+        "rot": 0,
+        "y": 0.03,
+        "color": "#c59d70"
+      },
+      {
+        "id": "demo-24",
+        "type": "stool",
+        "x": 1.4,
+        "z": -2.1,
+        "rot": 2,
+        "y": 0.03,
+        "color": "#b8c49c"
+      },
+      {
+        "id": "demo-25",
+        "type": "art",
+        "x": -2.7,
+        "z": -0.85,
+        "rot": 1,
+        "y": 1.2,
+        "color": "#bd8770",
+        "wallIndex": 5
+      },
+      {
+        "id": "demo-26",
+        "type": "plant",
+        "x": 2.35,
+        "z": 0.95,
+        "rot": 0,
+        "y": 0.03,
+        "color": "#7b9364"
+      },
+      {
+        "id": "demo-27",
+        "type": "rug",
+        "x": 0.8,
+        "z": -0.6,
+        "rot": 1,
+        "y": 0.03,
+        "color": "#e1ceb0"
+      },
+      {
+        "id": "demo-28",
+        "type": "chair",
+        "x": 0.2,
+        "z": -2.6,
+        "rot": 0,
+        "y": 0.03,
+        "color": "#e3cbb1"
+      },
+      {
+        "id": "demo-29",
+        "type": "lamp",
+        "x": -0.55,
+        "z": -3.1,
+        "rot": 0,
+        "y": 0.03,
+        "color": "#e8d2a3"
+      }
+    ]
+  },
+  "progress": {
+    "badges": []
+  }
+}

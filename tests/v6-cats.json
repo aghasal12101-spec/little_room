@@ -1,0 +1,121 @@
+{
+  "format": "little-room",
+  "version": 5,
+  "name": "两个人的日常 · 示范",
+  "state": {
+    "layout": "suite",
+    "contract": "cats",
+    "mode": "challenge",
+    "round": 1,
+    "roundRules": 2,
+    "night": false,
+    "curtains": false,
+    "wall": "#e8e5d7",
+    "floor": "#c7aa80",
+    "furniture": [
+      {
+        "id": "demo-11",
+        "type": "bed",
+        "x": 3.06,
+        "z": -1.9,
+        "rot": 3,
+        "y": 0.03,
+        "color": "#e3cbb1"
+      },
+      {
+        "id": "demo-12",
+        "type": "nightstand",
+        "x": 3.7,
+        "z": -3.08,
+        "rot": 0,
+        "y": 0.03,
+        "color": "#c59d70"
+      },
+      {
+        "id": "demo-13",
+        "type": "mirror",
+        "x": 1.25,
+        "z": -2,
+        "rot": 1,
+        "y": 0.03,
+        "color": "#d0b284"
+      },
+      {
+        "id": "demo-10",
+        "type": "dining",
+        "x": -1,
+        "z": -1.9,
+        "rot": 0,
+        "y": 0.03,
+        "color": "#c59d70"
+      },
+      {
+        "id": "demo-14",
+        "type": "stool",
+        "x": -2.05,
+        "z": -1.9,
+        "rot": 1,
+        "y": 0.03,
+        "color": "#b8c49c"
+      },
+      {
+        "id": "demo-15",
+        "type": "stool",
+        "x": 0.05,
+        "z": -1.9,
+        "rot": 3,
+        "y": 0.03,
+        "color": "#b8c49c"
+      },
+      {
+        "id": "demo-16",
+        "type": "vase",
+        "x": -1,
+        "z": -1.9,
+        "rot": 0,
+        "y": 0.8150000000000001,
+        "color": "#bd8770",
+        "parentId": "demo-10"
+      },
+      {
+        "id": "demo-17",
+        "type": "sofa",
+        "x": -3.65,
+        "z": 0.55,
+        "rot": 1,
+        "y": 0.03,
+        "color": "#b8c49c"
+      },
+      {
+        "id": "demo-18",
+        "type": "tv",
+        "x": -0.15,
+        "z": 0.55,
+        "rot": 3,
+        "y": 0.03,
+        "color": "#c59d70"
+      },
+      {
+        "id": "demo-19",
+        "type": "lamp",
+        "x": -3.85,
+        "z": -0.95,
+        "rot": 0,
+        "y": 0.03,
+        "color": "#e8d2a3"
+      },
+      {
+        "id": "demo-20",
+        "type": "rug",
+        "x": -2,
+        "z": 0.55,
+        "rot": 1,
+        "y": 0.03,
+        "color": "#e1ceb0"
+      }
+    ]
+  },
+  "progress": {
+    "badges": []
+  }
+}

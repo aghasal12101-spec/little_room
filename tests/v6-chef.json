@@ -1,0 +1,121 @@
+{
+  "format": "little-room",
+  "version": 5,
+  "name": "转角有烟火 · 示范",
+  "state": {
+    "layout": "kitchen",
+    "contract": "chef",
+    "mode": "challenge",
+    "round": 1,
+    "roundRules": 2,
+    "night": false,
+    "curtains": false,
+    "wall": "#e8e5d7",
+    "floor": "#c7aa80",
+    "furniture": [
+      {
+        "id": "demo-54",
+        "type": "counter",
+        "x": -1.6,
+        "z": -2,
+        "rot": 0,
+        "y": 0.03,
+        "color": "#c5baa2"
+      },
+      {
+        "id": "demo-55",
+        "type": "fridge",
+        "x": -0.41,
+        "z": -3.585,
+        "rot": 0,
+        "y": 0.03,
+        "color": "#e3ddd0"
+      },
+      {
+        "id": "demo-53",
+        "type": "dining",
+        "x": -2.3,
+        "z": 3.05,
+        "rot": 0,
+        "y": 0.03,
+        "color": "#c59d70"
+      },
+      {
+        "id": "demo-56",
+        "type": "stool",
+        "x": -3.4,
+        "z": 3.05,
+        "rot": 1,
+        "y": 0.03,
+        "color": "#b8c49c"
+      },
+      {
+        "id": "demo-57",
+        "type": "stool",
+        "x": -1.2,
+        "z": 3.05,
+        "rot": 3,
+        "y": 0.03,
+        "color": "#b8c49c"
+      },
+      {
+        "id": "demo-58",
+        "type": "vase",
+        "x": -2.3,
+        "z": 3.05,
+        "rot": 0,
+        "y": 0.8150000000000001,
+        "color": "#bd8770",
+        "parentId": "demo-53"
+      },
+      {
+        "id": "demo-59",
+        "type": "sofa",
+        "x": -1,
+        "z": 1,
+        "rot": 3,
+        "y": 0.03,
+        "color": "#b8c49c"
+      },
+      {
+        "id": "demo-60",
+        "type": "cabinet",
+        "x": 1.285,
+        "z": 3.1,
+        "rot": 3,
+        "y": 0.03,
+        "color": "#b58b70"
+      },
+      {
+        "id": "demo-61",
+        "type": "lamp",
+        "x": -3.6,
+        "z": -0.25,
+        "rot": 0,
+        "y": 0.03,
+        "color": "#e8d2a3"
+      },
+      {
+        "id": "demo-62",
+        "type": "bed",
+        "x": 2.86,
+        "z": -2.2,
+        "rot": 3,
+        "y": 0.03,
+        "color": "#e3cbb1"
+      },
+      {
+        "id": "demo-63",
+        "type": "rug",
+        "x": -2.4,
+        "z": 1,
+        "rot": 1,
+        "y": 0.03,
+        "color": "#e1ceb0"
+      }
+    ]
+  },
+  "progress": {
+    "badges": []
+  }
+}

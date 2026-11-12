@@ -15,3 +15,13 @@ select{font:inherit;color:var(--green);background:#f7f8f0;border:1px solid var(-
 @media(max-width:720px){#helpBtn{display:block;width:24px;height:26px;padding:0;flex-shrink:0}.header-actions{gap:3px}}
 
 @media(max-width:720px){.tutorial{top:151px;bottom:auto;max-height:120px;overflow:auto}.tutorial-on .challenge-card{display:none}.tutorial>strong{margin-top:5px}}
+
+/* v6: NYC apartments, perspective camera */
+.walk-btn{font-size:15px!important}
+.layout-card .layout-info p{font-size:11px}
+.layout-card .layout-story{display:block;color:var(--muted);font-size:10.5px;line-height:1.5;margin-top:6px}
+.layout-card svg rect,.layout-card svg line{shape-rendering:geometricPrecision}
+#canvasWrap canvas{cursor:grab}
+#canvasWrap canvas:active{cursor:grabbing}
+.layout-card svg{height:118px;padding:8px 10px}
+@media (max-width:720px){.layout-card svg{height:86px;padding:6px}.layout-card .layout-story{display:none}}
