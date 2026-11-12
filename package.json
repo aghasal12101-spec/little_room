@@ -1,0 +1,13 @@
+{
+  "name": "little-room",
+  "version": "5.0.0",
+  "private": true,
+  "description": "Offline 3D room decoration game",
+  "scripts": {
+    "build": "node build.cjs",
+    "test": "node test-all.cjs"
+  },
+  "engines": {
+    "node": ">=18"
+  }
+}

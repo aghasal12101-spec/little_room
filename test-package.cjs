@@ -1,0 +1,11 @@
+const fs=require('node:fs'),vm=require('node:vm'),assert=require('node:assert/strict');
+const html=fs.readFileSync('little-room.html','utf8');
+assert(!/<script[^>]+src=/.test(html),'Standalone must not load external scripts');
+assert(!/<link[^>]+stylesheet/.test(html),'Standalone must not load external styles');
+assert(!html.includes('@import'),'Standalone must not load remote fonts');
+assert(html.includes('$$=s=>'),'Dollar signs preserved during packaging');
+const scripts=[...html.matchAll(/<script(?:\s[^>]*)?>([\s\S]*?)<\/script>/g)];assert.equal(scripts.length,2);
+for(const [i,s]of scripts.entries())new vm.Script(s[1],{filename:'delivered-script-'+i+'.js'});
+const ids=[...html.matchAll(/\bid="([^"]+)"/g)].map(x=>x[1]);
+const required=['library','importInput','importAllInput','contractOptions','roundOptions','photoPreview','scoreBars','starGoals','tutorial','startupStatus'];required.forEach(id=>assert(ids.includes(id),id));
+console.log('Delivered HTML: 2 scripts parse; no external dependencies; packaging and UI hooks verified');

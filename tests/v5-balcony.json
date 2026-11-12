@@ -1,0 +1,131 @@
+{
+  "format": "little-room",
+  "version": 5,
+  "name": "阳台上的周末 · 进阶示范",
+  "state": {
+    "layout": "balcony",
+    "contract": "balcony",
+    "mode": "challenge",
+    "night": false,
+    "wall": "#e8e5d7",
+    "floor": "#c7aa80",
+    "curtains": false,
+    "pet": false,
+    "furniture": [
+      {
+        "id": "v3-3",
+        "type": "plant",
+        "x": -3.4,
+        "z": -2.75,
+        "rot": 0,
+        "y": 0.03,
+        "color": "#7b9364"
+      },
+      {
+        "id": "v3-4",
+        "type": "cactus",
+        "x": -2.5,
+        "z": -2.75,
+        "rot": 0,
+        "y": 0.03,
+        "color": "#819a68"
+      },
+      {
+        "id": "v3-5",
+        "type": "chair",
+        "x": -0.7,
+        "z": -2.75,
+        "rot": 0,
+        "y": 0.03,
+        "color": "#e3cbb1"
+      },
+      {
+        "id": "v3-2",
+        "type": "side",
+        "x": 1.8,
+        "z": -2.75,
+        "rot": 0,
+        "y": 0.03,
+        "color": "#c3997b"
+      },
+      {
+        "id": "v3-6",
+        "type": "books",
+        "x": 1.8,
+        "z": -2.75,
+        "rot": 0,
+        "y": 0.52,
+        "color": "#a3b6bd",
+        "parentId": "v3-2"
+      },
+      {
+        "id": "v3-7",
+        "type": "bed",
+        "x": 2.6,
+        "z": 0.2,
+        "rot": 0,
+        "y": 0.03,
+        "color": "#e3cbb1"
+      },
+      {
+        "id": "v3-8",
+        "type": "shelf",
+        "x": -3.3,
+        "z": -1.65,
+        "rot": 0,
+        "y": 0.03,
+        "color": "#c59d70"
+      },
+      {
+        "id": "v3-1",
+        "type": "dining",
+        "x": -2,
+        "z": 1,
+        "rot": 0,
+        "y": 0.03,
+        "color": "#c59d70"
+      },
+      {
+        "id": "v3-9",
+        "type": "stool",
+        "x": -3.05,
+        "z": 1,
+        "rot": 1,
+        "y": 0.03,
+        "color": "#b8c49c"
+      },
+      {
+        "id": "v3-10",
+        "type": "stool",
+        "x": -0.95,
+        "z": 1,
+        "rot": 3,
+        "y": 0.03,
+        "color": "#b8c49c"
+      },
+      {
+        "id": "v3-11",
+        "type": "lamp",
+        "x": -0.1,
+        "z": 2.5,
+        "rot": 0,
+        "y": 0.03,
+        "color": "#e8d2a3"
+      },
+      {
+        "id": "check-1242",
+        "type": "chair",
+        "x": 0.25,
+        "z": -2.75,
+        "rot": 0,
+        "y": 0.03,
+        "color": "#e3cbb1"
+      }
+    ],
+    "round": 2,
+    "roundRules": 2
+  },
+  "progress": {
+    "badges": []
+  }
+}

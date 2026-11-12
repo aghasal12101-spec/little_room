@@ -1,0 +1,116 @@
+{
+  "format": "little-room",
+  "version": 3,
+  "name": "各自专注，一起生活",
+  "progress": {
+    "badges": [
+      "coder",
+      "cats",
+      "rental"
+    ]
+  },
+  "state": {
+    "layout": "corridor",
+    "contract": "duo",
+    "mode": "challenge",
+    "night": false,
+    "wall": "#e8e5d7",
+    "floor": "#c7aa80",
+    "curtains": false,
+    "pet": false,
+    "furniture": [
+      {
+        "id": "v3-12",
+        "type": "desk",
+        "x": -3.3,
+        "z": -2.7,
+        "rot": 0,
+        "y": 0.03,
+        "color": "#c59d70"
+      },
+      {
+        "id": "v3-13",
+        "type": "desk",
+        "x": -0.4,
+        "z": -2.7,
+        "rot": 0,
+        "y": 0.03,
+        "color": "#c59d70"
+      },
+      {
+        "id": "v3-14",
+        "type": "stool",
+        "x": -3.3,
+        "z": -1.8,
+        "rot": 2,
+        "y": 0.03,
+        "color": "#b8c49c"
+      },
+      {
+        "id": "v3-15",
+        "type": "stool",
+        "x": -0.4,
+        "z": -1.8,
+        "rot": 2,
+        "y": 0.03,
+        "color": "#b8c49c"
+      },
+      {
+        "id": "v3-16",
+        "type": "pendant",
+        "x": -3.3,
+        "z": -2.7,
+        "rot": 0,
+        "y": 0.815,
+        "color": "#e8d7b1",
+        "parentId": "v3-12"
+      },
+      {
+        "id": "v3-17",
+        "type": "pendant",
+        "x": -0.4,
+        "z": -2.7,
+        "rot": 0,
+        "y": 0.815,
+        "color": "#e8d7b1",
+        "parentId": "v3-13"
+      },
+      {
+        "id": "v3-18",
+        "type": "bed",
+        "x": 3.25,
+        "z": -1.8,
+        "rot": 0,
+        "y": 0.03,
+        "color": "#e3cbb1"
+      },
+      {
+        "id": "v3-19",
+        "type": "wardrobe",
+        "x": 2.8,
+        "z": 2.6,
+        "rot": 0,
+        "y": 0.03,
+        "color": "#d9d3bc"
+      },
+      {
+        "id": "v3-20",
+        "type": "sofa",
+        "x": -2.8,
+        "z": 2.5,
+        "rot": 0,
+        "y": 0.03,
+        "color": "#b8c49c"
+      },
+      {
+        "id": "v3-21",
+        "type": "plant",
+        "x": -0.5,
+        "z": 2.5,
+        "rot": 0,
+        "y": 0.03,
+        "color": "#7b9364"
+      }
+    ]
+  }
+}

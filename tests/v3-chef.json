@@ -1,0 +1,106 @@
+{
+  "format": "little-room",
+  "version": 3,
+  "name": "转角有烟火",
+  "progress": {
+    "badges": [
+      "coder",
+      "cats",
+      "rental"
+    ]
+  },
+  "state": {
+    "layout": "kitchen",
+    "contract": "chef",
+    "mode": "challenge",
+    "night": false,
+    "wall": "#e8e5d7",
+    "floor": "#c7aa80",
+    "curtains": false,
+    "pet": false,
+    "furniture": [
+      {
+        "id": "v3-23",
+        "type": "counter",
+        "x": -2.6,
+        "z": -3.4,
+        "rot": 0,
+        "y": 0.03,
+        "color": "#c5baa2"
+      },
+      {
+        "id": "v3-24",
+        "type": "fridge",
+        "x": -3.4,
+        "z": -2.2,
+        "rot": 0,
+        "y": 0.03,
+        "color": "#e3ddd0"
+      },
+      {
+        "id": "v3-22",
+        "type": "dining",
+        "x": 0.3,
+        "z": 1.6,
+        "rot": 0,
+        "y": 0.03,
+        "color": "#c59d70"
+      },
+      {
+        "id": "v3-25",
+        "type": "stool",
+        "x": -0.8,
+        "z": 1.6,
+        "rot": 1,
+        "y": 0.03,
+        "color": "#b8c49c"
+      },
+      {
+        "id": "v3-26",
+        "type": "stool",
+        "x": 1.4,
+        "z": 1.6,
+        "rot": 3,
+        "y": 0.03,
+        "color": "#b8c49c"
+      },
+      {
+        "id": "v3-27",
+        "type": "sofa",
+        "x": -2.5,
+        "z": 0.1,
+        "rot": 0,
+        "y": 0.03,
+        "color": "#b8c49c"
+      },
+      {
+        "id": "v3-28",
+        "type": "shelf",
+        "x": 3.5,
+        "z": 0.1,
+        "rot": 1,
+        "y": 0.03,
+        "color": "#c59d70"
+      },
+      {
+        "id": "v3-29",
+        "type": "vase",
+        "x": 0.3,
+        "z": 1.6,
+        "rot": 0,
+        "y": 0.815,
+        "color": "#bd8770",
+        "parentId": "v3-22"
+      },
+      {
+        "id": "v3-30",
+        "type": "lamp",
+        "x": -3.5,
+        "z": 1.5,
+        "rot": 0,
+        "y": 0.03,
+        "color": "#e8d2a3"
+      }
+    ]
+  }
+}

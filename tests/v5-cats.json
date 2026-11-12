@@ -1,0 +1,120 @@
+{
+  "format": "little-room",
+  "version": 5,
+  "name": "两个人的日常 · 进阶示范",
+  "state": {
+    "layout": "suite",
+    "contract": "cats",
+    "mode": "challenge",
+    "night": false,
+    "wall": "#e8e5d7",
+    "floor": "#c7aa80",
+    "furniture": [
+      {
+        "id": "0.5ax5au15rto",
+        "type": "bed",
+        "x": 2.5,
+        "z": -1,
+        "rot": 1,
+        "y": 0.03,
+        "color": "#e3cbb1"
+      },
+      {
+        "id": "0.ff99ytyfavo",
+        "type": "dining",
+        "x": -2,
+        "z": 1.6,
+        "rot": 0,
+        "y": 0.03,
+        "color": "#c59d70"
+      },
+      {
+        "id": "0.2kfl6kktnbu",
+        "type": "stool",
+        "x": -3.1,
+        "z": 1.6,
+        "rot": 1,
+        "y": 0.03,
+        "color": "#b8c49c"
+      },
+      {
+        "id": "0.cn0ym0gcyfi",
+        "type": "stool",
+        "x": -0.9,
+        "z": 1.6,
+        "rot": 3,
+        "y": 0.03,
+        "color": "#b8c49c"
+      },
+      {
+        "id": "0.oeah7bix0oi",
+        "type": "sofa",
+        "x": -2,
+        "z": -1.8,
+        "rot": 0,
+        "y": 0.03,
+        "color": "#b8c49c"
+      },
+      {
+        "id": "0.cpybc8ffc6",
+        "type": "tv",
+        "x": -2,
+        "z": -0.4,
+        "rot": 2,
+        "y": 0.03,
+        "color": "#c59d70"
+      },
+      {
+        "id": "0.oy9d9mofkwd",
+        "type": "nightstand",
+        "x": 2.5,
+        "z": -2.15,
+        "rot": 0,
+        "y": 0.03,
+        "color": "#c59d70"
+      },
+      {
+        "id": "0.6i8tr945e9q",
+        "type": "mirror",
+        "x": 3.4,
+        "z": 0.3,
+        "rot": 0,
+        "y": 0.03,
+        "color": "#d0b284"
+      },
+      {
+        "id": "0.fqfoyotie",
+        "type": "vase",
+        "x": -2,
+        "z": 1.6,
+        "rot": 0,
+        "y": 0.815,
+        "color": "#bd8770",
+        "parentId": "0.ff99ytyfavo"
+      },
+      {
+        "id": "0.pbfpv4p3ijg",
+        "type": "lamp",
+        "x": -3.5,
+        "z": -2.5,
+        "rot": 0,
+        "y": 0.03,
+        "color": "#e8d2a3"
+      },
+      {
+        "id": "check-522",
+        "type": "nightstand",
+        "x": 2.5,
+        "z": 0.15,
+        "rot": 0,
+        "y": 0.03,
+        "color": "#c59d70"
+      }
+    ],
+    "round": 2,
+    "roundRules": 2
+  },
+  "progress": {
+    "badges": []
+  }
+}

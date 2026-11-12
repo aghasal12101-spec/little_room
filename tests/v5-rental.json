@@ -1,0 +1,112 @@
+{
+  "format": "little-room",
+  "version": 5,
+  "name": "预算里的小确幸 · 进阶示范",
+  "state": {
+    "layout": "loft",
+    "contract": "rental",
+    "mode": "challenge",
+    "night": false,
+    "wall": "#e8e5d7",
+    "floor": "#c7aa80",
+    "furniture": [
+      {
+        "id": "0.jhz65vgukjo",
+        "type": "bed",
+        "x": -2.5,
+        "z": -2.3,
+        "rot": 0,
+        "y": 0.03,
+        "color": "#e3cbb1"
+      },
+      {
+        "id": "0.btqal2wn02d",
+        "type": "shelf",
+        "x": -0.85,
+        "z": -3.65,
+        "rot": 0,
+        "y": 0.03,
+        "color": "#c59d70"
+      },
+      {
+        "id": "0.eatcv6zospe",
+        "type": "desk",
+        "x": -2.6,
+        "z": 0.3,
+        "rot": 0,
+        "y": 0.03,
+        "color": "#c59d70"
+      },
+      {
+        "id": "0.7c12y05f3rb",
+        "type": "stool",
+        "x": -2.6,
+        "z": 1.1,
+        "rot": 2,
+        "y": 0.03,
+        "color": "#b8c49c"
+      },
+      {
+        "id": "0.d5btvyszgri",
+        "type": "art",
+        "x": -3.9,
+        "z": 1.5,
+        "rot": 1,
+        "y": 1.1,
+        "color": "#bd8770",
+        "wallIndex": 1
+      },
+      {
+        "id": "0.nxl5ykfidab",
+        "type": "plant",
+        "x": 0.6,
+        "z": 2.8,
+        "rot": 0,
+        "y": 0.03,
+        "color": "#7b9364"
+      },
+      {
+        "id": "0.xipahoa3l2",
+        "type": "rug",
+        "x": 1.7,
+        "z": 1.8,
+        "rot": 0,
+        "y": 0.03,
+        "color": "#e1ceb0"
+      },
+      {
+        "id": "check-679",
+        "type": "bench",
+        "x": -1,
+        "z": -3.25,
+        "rot": 0,
+        "y": 0.03,
+        "color": "#b8c49c"
+      },
+      {
+        "id": "check-1064",
+        "type": "nightstand",
+        "x": -1.25,
+        "z": -2.75,
+        "rot": 0,
+        "y": 0.03,
+        "color": "#c59d70"
+      },
+      {
+        "id": "check-1065",
+        "type": "pendant",
+        "x": -1.25,
+        "z": -2.75,
+        "rot": 0,
+        "y": 0.51,
+        "color": "#e8d7b1",
+        "parentId": "check-1064"
+      }
+    ],
+    "round": 2,
+    "roundRules": 2
+  },
+  "progress": {
+    "badges": []
+  }
+}

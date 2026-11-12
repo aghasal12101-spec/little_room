@@ -1,0 +1,10 @@
+.openai/
+node_modules/
+*.zip
+*-backup.html
+*-preview.png
+.DS_Store
+Thumbs.db
+*.log
+.env
+.env.*
